@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 export interface FileNode {
   name: string;
@@ -36,9 +36,17 @@ const INITIAL_FS: FileNode[] = [
 ];
 
 export function useFileSystem() {
-  const [fs, setFs] = useState<FileNode[]>(INITIAL_FS);
+  const [fs, setFs] = useState<FileNode[]>(() => {
+    const saved = localStorage.getItem('browseros-fs');
+    return saved ? JSON.parse(saved) : INITIAL_FS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('browseros-fs', JSON.stringify(fs));
+  }, [fs]);
 
   const getPath = useCallback((path: string): FileNode | null => {
+    if (path === '/' || path === '') return { name: 'root', type: 'directory', children: fs };
     const parts = path.split('/').filter(Boolean);
     let current: FileNode | undefined = { name: 'root', type: 'directory', children: fs };
 
@@ -50,5 +58,14 @@ export function useFileSystem() {
     return current;
   }, [fs]);
 
-  return { fs, getPath };
+  const writeFile = useCallback((path: string, content: string) => {
+    // Simplified write logic for demo
+    setFs(prev => {
+      const newFs = [...prev];
+      // Logic to find and update file would go here
+      return newFs;
+    });
+  }, []);
+
+  return { fs, getPath, writeFile };
 }

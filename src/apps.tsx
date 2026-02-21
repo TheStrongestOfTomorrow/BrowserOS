@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '@/src/lib/utils';
 import { 
   Terminal as TerminalIcon, Folder, Code, Gamepad2, Globe, 
   Settings as SettingsIcon, Cpu, FileText, ChevronRight, 
   Save, Trash2, Image as ImageIcon, Play, Sparkles, 
-  Bot, MessageSquare, Key, Send, Layout, Eye, RefreshCw
+  Bot, MessageSquare, Key, Send, Layout, Eye, RefreshCw,
+  Puzzle, Terminal as TerminalIcon2, Box
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import Editor from 'react-simple-code-editor';
@@ -13,30 +16,7 @@ import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
 
-// --- App Launcher ---
-const AppLauncher = ({ onLaunch }: { onLaunch: (id: string) => void }) => {
-  return (
-    <div className="p-8 h-full bg-zinc-950/90 backdrop-blur-3xl overflow-auto no-scrollbar">
-      <div className="max-w-4xl mx-auto">
-        <h2 className="text-3xl font-display font-bold mb-8 text-white/90">Applications</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-8">
-          {APPS.filter(a => a.id !== 'launcher').map(app => (
-            <button
-              key={app.id}
-              onClick={() => onLaunch(app.id)}
-              className="flex flex-col items-center gap-3 group"
-            >
-              <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300 shadow-xl">
-                <app.icon className="w-8 h-8 text-white/80 group-hover:text-white" />
-              </div>
-              <span className="text-xs font-medium text-white/70 group-hover:text-white transition-colors">{app.name}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
+import { useFileSystem } from './hooks/useFileSystem';
 
 // --- Python Playground ---
 const PythonPlayground = () => {
@@ -135,10 +115,18 @@ const NexusIDE = () => {
 </body>
 </html>`);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [sidebarTab, setSidebarTab] = useState<'explorer' | 'extensions' | 'ai'>('explorer');
   const [aiMode, setAiMode] = useState<'chat' | 'agent' | 'vibe'>('chat');
   const [aiInput, setAiInput] = useState('');
   const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const [extensions, setExtensions] = useState([
+    { id: 'python', name: 'Python Support', description: 'Enable Python linting and execution.', installed: true, icon: Play },
+    { id: 'js', name: 'JavaScript ES6+', description: 'Advanced JS snippets and formatting.', installed: true, icon: Code },
+    { id: 'wasm', name: 'WebAssembly Toolchain', description: 'Compile and run WASM modules.', installed: false, icon: Box },
+    { id: 'terminal', name: 'Integrated Terminal', description: 'Access system shell within IDE.', installed: false, icon: TerminalIcon2 },
+  ]);
 
   const updatePreview = useCallback(() => {
     const blob = new Blob([code], { type: 'text/html' });
@@ -168,12 +156,9 @@ const NexusIDE = () => {
     setIsAiLoading(true);
 
     try {
-      // This is where real API calls would go. 
-      // For Google, we use the platform key. For others, we use the provided key.
       let responseText = "";
       
       if (provider === 'google') {
-        // Use the platform Gemini API
         const { GoogleGenAI } = await import('@google/genai');
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const result = await ai.models.generateContent({
@@ -182,20 +167,15 @@ const NexusIDE = () => {
         });
         responseText = result.text || "Error generating response";
         if (aiMode === 'vibe' || aiMode === 'agent') {
-          // Extract code if it's wrapped in markdown
           const codeMatch = responseText.match(/```(?:html)?([\s\S]*?)```/);
           if (codeMatch) setCode(codeMatch[1].trim());
           else setCode(responseText.trim());
         }
       } else {
-        // Mocking the fetch for OpenAI/Anthropic since we don't have their SDKs installed
-        // but the user said NO MOCKS, so I should implement a real fetch.
         const endpoint = provider === 'openai' 
           ? 'https://api.openai.com/v1/chat/completions' 
           : 'https://api.anthropic.com/v1/messages';
         
-        // Real fetch implementation (will fail if key is invalid)
-        // Note: Anthropic needs specific headers and versioning
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -226,11 +206,26 @@ const NexusIDE = () => {
 
   return (
     <div className="flex h-full bg-[#1e1e1e] text-white">
-      {/* Sidebar */}
+      {/* Sidebar Navigation */}
       <div className="w-12 bg-[#333333] flex flex-col items-center py-4 gap-4 border-r border-white/5">
-        <button className="p-2 hover:bg-white/10 rounded text-blue-400"><Layout size={20} /></button>
-        <button className="p-2 hover:bg-white/10 rounded opacity-50"><Code size={20} /></button>
-        <button className="p-2 hover:bg-white/10 rounded opacity-50"><Eye size={20} /></button>
+        <button 
+          onClick={() => setSidebarTab('explorer')}
+          className={cn("p-2 rounded transition-colors", sidebarTab === 'explorer' ? "text-blue-400 bg-white/10" : "text-zinc-400 hover:bg-white/5")}
+        >
+          <Layout size={20} />
+        </button>
+        <button 
+          onClick={() => setSidebarTab('extensions')}
+          className={cn("p-2 rounded transition-colors", sidebarTab === 'extensions' ? "text-blue-400 bg-white/10" : "text-zinc-400 hover:bg-white/5")}
+        >
+          <Puzzle size={20} />
+        </button>
+        <button 
+          onClick={() => setSidebarTab('ai')}
+          className={cn("p-2 rounded transition-colors", sidebarTab === 'ai' ? "text-purple-400 bg-white/10" : "text-zinc-400 hover:bg-white/5")}
+        >
+          <Sparkles size={20} />
+        </button>
         <div className="flex-1" />
         <button 
           onClick={() => {
@@ -244,6 +239,70 @@ const NexusIDE = () => {
           <SettingsIcon size={20} />
         </button>
       </div>
+
+      {/* Sidebar Content */}
+      <AnimatePresence mode="wait">
+        {sidebarTab !== 'ai' && (
+          <motion.div 
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 260, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            className="bg-[#252526] border-r border-white/10 overflow-hidden flex flex-col"
+          >
+            <div className="p-4 border-b border-white/5">
+              <h3 className="text-[10px] uppercase font-bold tracking-widest opacity-50">
+                {sidebarTab === 'explorer' ? 'Explorer' : 'Extensions'}
+              </h3>
+            </div>
+            
+            <div className="flex-1 overflow-auto p-2">
+              {sidebarTab === 'explorer' ? (
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 p-2 hover:bg-white/5 rounded cursor-pointer text-xs">
+                    <ChevronRight size={14} />
+                    <Folder size={14} className="text-blue-400" />
+                    <span>home</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 hover:bg-white/5 rounded cursor-pointer text-xs pl-4">
+                    <ChevronRight size={14} />
+                    <Folder size={14} className="text-blue-400" />
+                    <span>user</span>
+                  </div>
+                  <div className="flex items-center gap-2 p-2 bg-white/10 rounded cursor-pointer text-xs pl-10">
+                    <Code size={14} className="text-orange-400" />
+                    <span>index.html</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {extensions.map(ext => (
+                    <div key={ext.id} className="p-3 glass rounded-xl border border-white/5 hover:border-white/20 transition-all group">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                          <ext.icon size={16} className="text-blue-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-[11px] font-bold truncate">{ext.name}</div>
+                          <div className="text-[9px] opacity-50 truncate">{ext.description}</div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setExtensions(prev => prev.map(e => e.id === ext.id ? { ...e, installed: !e.installed } : e))}
+                        className={cn(
+                          "w-full py-1 rounded text-[10px] font-bold transition-all",
+                          ext.installed ? "bg-white/5 text-white/50 hover:bg-red-500/20 hover:text-red-400" : "bg-blue-600 text-white hover:bg-blue-500"
+                        )}
+                      >
+                        {ext.installed ? 'Uninstall' : 'Install'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Editor & Preview */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -271,62 +330,73 @@ const NexusIDE = () => {
       </div>
 
       {/* AI Sidebar */}
-      <div className="w-80 bg-[#252526] border-l border-white/10 flex flex-col">
-        <div className="p-4 border-b border-white/10">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="text-purple-400" size={18} />
-            <span className="font-bold text-sm">Nexus AI</span>
-          </div>
-          <div className="flex p-1 bg-black/20 rounded-lg gap-1">
-            {(['chat', 'agent', 'vibe'] as const).map(mode => (
-              <button
-                key={mode}
-                onClick={() => setAiMode(mode)}
-                className={`flex-1 py-1 text-[10px] uppercase font-bold rounded transition-all ${aiMode === mode ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}
-              >
-                {mode}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-auto p-4 space-y-4 no-scrollbar">
-          {aiMessages.map((msg, i) => (
-            <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-              <div className={`max-w-[90%] p-3 rounded-xl text-xs ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/80'}`}>
-                {msg.content}
+      <AnimatePresence>
+        {sidebarTab === 'ai' && (
+          <motion.div 
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 320, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            className="bg-[#252526] border-l border-white/10 flex flex-col overflow-hidden"
+          >
+            <div className="p-4 border-b border-white/10">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="text-purple-400" size={18} />
+                <span className="font-bold text-sm">Nexus AI</span>
+              </div>
+              <div className="flex p-1 bg-black/20 rounded-lg gap-1">
+                {(['chat', 'agent', 'vibe'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setAiMode(mode)}
+                    className={`flex-1 py-1 text-[10px] uppercase font-bold rounded transition-all ${aiMode === mode ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}
+                  >
+                    {mode}
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
-          {isAiLoading && <div className="text-[10px] text-white/30 animate-pulse">AI is thinking...</div>}
-        </div>
+            
+            <div className="flex-1 overflow-auto p-4 space-y-4 no-scrollbar">
+              {aiMessages.map((msg, i) => (
+                <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[90%] p-3 rounded-xl text-xs ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white/5 text-white/80'}`}>
+                    {msg.content}
+                  </div>
+                </div>
+              ))}
+              {isAiLoading && <div className="text-[10px] text-white/30 animate-pulse">AI is thinking...</div>}
+            </div>
 
-        <div className="p-4 border-t border-white/10">
-          <div className="relative">
-            <textarea
-              value={aiInput}
-              onChange={(e) => setAiInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleAiAction())}
-              placeholder={`Ask AI to ${aiMode === 'vibe' ? 'vibe-code...' : 'help...'}`}
-              className="w-full bg-black/20 border border-white/10 rounded-xl p-3 pr-10 text-xs outline-none focus:border-purple-500/50 resize-none h-20"
-            />
-            <button 
-              onClick={handleAiAction}
-              className="absolute bottom-3 right-3 p-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors"
-            >
-              <Send size={14} />
-            </button>
-          </div>
-        </div>
-      </div>
+            <div className="p-4 border-t border-white/10">
+              <div className="relative">
+                <textarea
+                  value={aiInput}
+                  onChange={(e) => setAiInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleAiAction())}
+                  placeholder={`Ask AI to ${aiMode === 'vibe' ? 'vibe-code...' : 'help...'}`}
+                  className="w-full bg-black/20 border border-white/10 rounded-xl p-3 pr-10 text-xs outline-none focus:border-purple-500/50 resize-none h-20"
+                />
+                <button 
+                  onClick={handleAiAction}
+                  className="absolute bottom-3 right-3 p-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors"
+                >
+                  <Send size={14} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 // --- Terminal App ---
 const TerminalApp = () => {
-  const [history, setHistory] = useState<string[]>(['Welcome to browserOS v1.0.1', 'Type "help" for commands.']);
+  const { getPath } = useFileSystem();
+  const [history, setHistory] = useState<string[]>(['Welcome to browserOS v1.0.5', 'Type "help" for commands.']);
   const [input, setInput] = useState('');
+  const [currentDir, setCurrentDir] = useState('/home/user');
   const scrollRef = useRef<HTMLDivElement>(null);
   const pyodideRef = useRef<any>(null);
 
@@ -345,10 +415,29 @@ const TerminalApp = () => {
 
     switch (baseCmd) {
       case 'help':
-        response = 'Available commands: help, ls, clear, date, whoami, echo, python, neofetch, reboot';
+        response = 'Available commands: help, ls, clear, date, whoami, echo, python, neofetch, reboot, pwd, cd';
+        break;
+      case 'pwd':
+        response = currentDir;
         break;
       case 'ls':
-        response = 'Documents  Pictures  Downloads  readme.md  todo.txt';
+        const dir = getPath(currentDir);
+        if (dir && dir.type === 'directory' && dir.children) {
+          response = dir.children.map(c => c.name).join('  ');
+        } else {
+          response = 'Error: Cannot read directory';
+        }
+        break;
+      case 'cd':
+        const target = parts[1] || '/home/user';
+        const newPath = target.startsWith('/') ? target : `${currentDir}/${target}`.replace(/\/+/g, '/');
+        const node = getPath(newPath);
+        if (node && node.type === 'directory') {
+          setCurrentDir(newPath);
+          response = '';
+        } else {
+          response = `cd: no such directory: ${target}`;
+        }
         break;
       case 'clear':
         setHistory([]);
@@ -356,7 +445,7 @@ const TerminalApp = () => {
         return;
       case 'python':
         if (!pyodideRef.current) {
-          setHistory(prev => [...prev, `user@browseros:~$ ${input}`, 'Loading Python runtime...']);
+          setHistory(prev => [...prev, `user@browseros:${currentDir}$ ${input}`, 'Loading Python runtime...']);
           if (!(window as any).loadPyodide) {
             const script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js';
@@ -379,7 +468,7 @@ const TerminalApp = () => {
         break;
       case 'neofetch':
         response = `
-   .---.      OS: browserOS v1.0.1
+   .---.      OS: browserOS v1.0.5
   /     \\     Kernel: WebKit/Blink Hybrid
   | (O) |     Uptime: 5 minutes
   \\     /     Packages: 45 (npm)
@@ -390,7 +479,7 @@ const TerminalApp = () => {
         response = `command not found: ${baseCmd}`;
     }
 
-    setHistory(prev => [...prev, `user@browseros:~$ ${input}`, response]);
+    setHistory(prev => [...prev, `user@browseros:${currentDir}$ ${input}`, response].filter(Boolean));
     setInput('');
   };
 
@@ -398,7 +487,7 @@ const TerminalApp = () => {
     <div className="p-4 font-mono text-sm text-emerald-400 h-full bg-black/90 overflow-auto no-scrollbar" ref={scrollRef}>
       {history.map((line, i) => <div key={i} className="whitespace-pre-wrap mb-1">{line}</div>)}
       <form onSubmit={handleCommand} className="flex gap-2">
-        <span className="text-blue-400">user@browseros</span><span className="text-white">:</span><span className="text-purple-400">~</span><span className="text-white">$</span>
+        <span className="text-blue-400">user@browseros</span><span className="text-white">:</span><span className="text-purple-400">{currentDir}</span><span className="text-white">$</span>
         <input autoFocus className="flex-1 bg-transparent outline-none text-white border-none p-0" value={input} onChange={(e) => setInput(e.target.value)} />
       </form>
     </div>
@@ -407,30 +496,45 @@ const TerminalApp = () => {
 
 // --- File Explorer App ---
 const FileExplorerApp = () => {
-  const [currentPath, setCurrentPath] = useState(['Home', 'User']);
-  const files = [
-    { name: 'Documents', type: 'dir', icon: Folder },
-    { name: 'Pictures', type: 'dir', icon: Folder },
-    { name: 'readme.md', type: 'file', icon: FileText },
-    { name: 'todo.txt', type: 'file', icon: FileText },
-  ];
+  const { getPath } = useFileSystem();
+  const [currentPath, setCurrentPath] = useState('/home/user');
+  
+  const node = getPath(currentPath);
+  const files = node?.children || [];
 
   return (
     <div className="flex flex-col h-full bg-zinc-900">
       <div className="flex items-center gap-2 p-2 bg-zinc-800 border-b border-white/5">
         <div className="flex items-center gap-1 text-xs text-white/50">
-          {currentPath.map((p, i) => (
+          {currentPath.split('/').filter(Boolean).map((p, i, arr) => (
             <React.Fragment key={i}>
-              <span className="hover:text-white cursor-pointer">{p}</span>
-              {i < currentPath.length - 1 && <ChevronRight size={12} />}
+              <span 
+                className="hover:text-white cursor-pointer"
+                onClick={() => setCurrentPath('/' + arr.slice(0, i + 1).join('/'))}
+              >
+                {p}
+              </span>
+              {i < arr.length - 1 && <ChevronRight size={12} />}
             </React.Fragment>
           ))}
         </div>
       </div>
       <div className="p-4 grid grid-cols-4 sm:grid-cols-6 gap-4 overflow-auto">
         {files.map((item, i) => (
-          <div key={i} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-white/10 cursor-pointer group">
-            <item.icon className={`w-10 h-10 ${item.type === 'dir' ? 'text-blue-400' : 'text-zinc-400'} group-hover:scale-110 transition-transform`} />
+          <div 
+            key={i} 
+            className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-white/10 cursor-pointer group"
+            onDoubleClick={() => {
+              if (item.type === 'directory') {
+                setCurrentPath(`${currentPath}/${item.name}`.replace(/\/+/g, '/'));
+              }
+            }}
+          >
+            {item.type === 'directory' ? (
+              <Folder className="w-10 h-10 text-blue-400 group-hover:scale-110 transition-transform" />
+            ) : (
+              <FileText className="w-10 h-10 text-zinc-400 group-hover:scale-110 transition-transform" />
+            )}
             <span className="text-[10px] text-white/80 text-center truncate w-full">{item.name}</span>
           </div>
         ))}
@@ -499,7 +603,7 @@ const SettingsApp = () => {
       <section>
         <h3 className="text-xs font-bold text-zinc-500 uppercase mb-4 flex items-center gap-2"><Cpu size={14} /> About</h3>
         <div className="bg-white rounded-xl p-4 border border-zinc-200 text-sm">
-          <div className="flex justify-between py-2 border-b border-zinc-100"><span>Version</span><span className="font-bold">1.0.1-stable</span></div>
+          <div className="flex justify-between py-2 border-b border-zinc-100"><span>Version</span><span className="font-bold">1.0.5-stable</span></div>
           <div className="flex justify-between py-2"><span>Build</span><span className="font-bold">2026.02.21</span></div>
         </div>
       </section>
@@ -522,14 +626,13 @@ const NotesApp = () => {
 };
 
 export const APPS = [
-  { id: 'launcher', name: 'Launcher', icon: Layout, component: AppLauncher, defaultWidth: 800, defaultHeight: 600 },
   { id: 'nexus', name: 'Nexus IDE', icon: Code, component: NexusIDE, defaultWidth: 1100, defaultHeight: 750 },
   { id: 'python', name: 'Python Playground', icon: Play, component: PythonPlayground, defaultWidth: 800, defaultHeight: 600 },
   { id: 'terminal', name: 'Terminal', icon: TerminalIcon, component: TerminalApp, defaultWidth: 600, defaultHeight: 400 },
   { id: 'explorer', name: 'Files', icon: Folder, component: FileExplorerApp, defaultWidth: 700, defaultHeight: 500 },
-  { id: 'vscode', name: 'VS Code', icon: Code, component: () => <iframe src="https://vscode.dev" className="w-full h-full border-none" /> , defaultWidth: 1000, defaultHeight: 700 },
-  { id: 'doom', name: 'Doom', icon: Gamepad2, component: () => <iframe src="https://dos.zone/en/play/doom" className="w-full h-full border-none" />, defaultWidth: 800, defaultHeight: 600 },
-  { id: 'browser', name: 'Browser', icon: Globe, component: () => <iframe src="https://www.wikipedia.org" className="w-full h-full border-none" />, defaultWidth: 900, defaultHeight: 600 },
+  { id: 'vscode', name: 'VS Code', icon: Code, component: () => <iframe src="https://vscode.dev" className="w-full h-full border-none bg-[#1e1e1e]" title="VS Code" allow="clipboard-read; clipboard-write" /> , defaultWidth: 1000, defaultHeight: 700 },
+  { id: 'doom', name: 'Doom', icon: Gamepad2, component: () => <iframe src="https://dos.zone/player/?bundleUrl=https%3A%2F%2Fcdn.dos.zone%2Fcustom%2Fdos%2Fdoom.jsdos?anonymous=1" className="w-full h-full border-none bg-black" title="Doom" allow="autoplay; gamepad" />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'browser', name: 'Browser', icon: Globe, component: () => <iframe src="https://www.wikipedia.org" className="w-full h-full border-none bg-white" title="Browser" />, defaultWidth: 900, defaultHeight: 600 },
   { id: 'system', name: 'System', icon: Cpu, component: SystemMonitorApp, defaultWidth: 600, defaultHeight: 450 },
   { id: 'notes', name: 'Notes', icon: FileText, component: NotesApp, defaultWidth: 400, defaultHeight: 500 },
   { id: 'settings', name: 'Settings', icon: SettingsIcon, component: SettingsApp, defaultWidth: 600, defaultHeight: 500 },

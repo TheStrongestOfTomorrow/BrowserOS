@@ -38,12 +38,12 @@ export const Window: React.FC<WindowProps> = ({
         y: window.isMaximized ? 0 : window.y,
         zIndex: window.zIndex,
       }}
-      exit={{ scale: 0.9, opacity: 0 }}
+      exit={{ scale: 0.9, opacity: 0, filter: 'blur(10px)' }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className={cn(
-        "absolute glass rounded-xl overflow-hidden flex flex-col window-shadow",
-        window.isMaximized ? "rounded-none" : "rounded-xl",
-        isDragging ? "cursor-grabbing" : "cursor-default"
+        "absolute glass rounded-2xl overflow-hidden flex flex-col window-shadow border border-white/20",
+        window.isMaximized ? "rounded-none" : "rounded-2xl",
+        isDragging ? "cursor-grabbing shadow-2xl scale-[1.01]" : "cursor-default"
       )}
       onMouseDown={() => onFocus(window.id)}
       drag={!window.isMaximized}

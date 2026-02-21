@@ -46,14 +46,14 @@ export default function App() {
       icon: appId,
       isOpen: true,
       isMinimized: false,
-      isMaximized: appId === 'launcher', // Launcher should be big
+      isMaximized: false,
       zIndex: Math.max(...windows.map(w => w.zIndex), 0) + 1,
       type: 'app',
       content: <app.component onLaunch={launchApp} />,
       width: app.defaultWidth || 600,
       height: app.defaultHeight || 400,
-      x: appId === 'launcher' ? 0 : 100 + windows.length * 30,
-      y: appId === 'launcher' ? 0 : 100 + windows.length * 30,
+      x: 100 + windows.length * 30,
+      y: 100 + windows.length * 30,
     };
 
     setWindows(prev => [...prev, newWindow]);
