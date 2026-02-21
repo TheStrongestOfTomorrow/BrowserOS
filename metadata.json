@@ -1,0 +1,5 @@
+{
+  "name": "browserOS",
+  "description": "A high-performance, web-based operating system featuring window management, VS Code integration, and classic gaming.",
+  "requestFramePermissions": []
+}

@@ -1,11 +1,31 @@
-<div align="center">
+# browserOS 🚀
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A high-performance, web-based operating system featuring window management, VS Code integration, and classic gaming.
 
-  <h1>Built with AI Studio</h2>
+## 🌟 Features
+- **Window Management**: Draggable, resizable, and focusable windows.
+- **Integrated Apps**: VS Code, Doom, Terminal, File Explorer, System Monitor, and more.
+- **Customization**: Change wallpapers and system settings.
+- **Persistence**: Notes and settings are saved to local storage.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## 🗺️ Roadmap
+- [ ] Multi-user support with real-time collaboration.
+- [ ] Cloud storage integration (Google Drive, Dropbox).
+- [ ] Custom app development SDK.
+- [ ] Mobile-optimized layout.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 📜 Update Log
+### v1.0.0-alpha (Current)
+- Initial release of browserOS.
+- Core windowing system implemented.
+- Added Terminal, Files, VS Code, Doom, and System Monitor.
+- Persistent Notes and Settings.
 
-</div>
+## 🏠 How to Self-Host
+1. Clone the repository: `git clone https://github.com/user/browseros.git`
+2. Install dependencies: `npm install`
+3. Start the development server: `npm run dev`
+4. Build for production: `npm run build`
+
+---
+*browserOS is currently in alpha phase. Expect frequent updates and new features.*
