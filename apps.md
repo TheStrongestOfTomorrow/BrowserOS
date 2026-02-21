@@ -1,23 +1,28 @@
 # browserOS Application Suite 📦
 
-Detailed breakdown of the built-in applications available in browserOS v1.0.5.
+Detailed breakdown of the built-in applications available in browserOS v1.1.0.
 
 ## 🛠️ Productivity
 
-### Nexus IDE
+### Nexus IDE Pro
 The crown jewel of browserOS. A full-featured integrated development environment that supports:
+- **Multi-file Tabs**: Work on multiple files simultaneously.
+- **Integrated Console**: Debug your JavaScript code in real-time.
 - **Live Preview**: Real-time rendering of HTML/CSS/JS.
 - **AI Integration**: Bring your own keys for OpenAI, Anthropic, or use the built-in Google Gemini support.
-- **Modes**: 
-  - *Chat*: Standard AI assistance.
-  - *Agent*: Let the AI take control of the codebase.
-  - *Vibe-coding*: High-speed, intuitive coding with AI guidance.
+- **Download**: Export your projects as local files.
 
-### VS Code
-The industry standard editor, running directly in your browser. Perfect for heavy-duty development tasks without leaving the OS.
+### YouTube
+A dedicated video player that embeds YouTube content directly. Just paste a link and enjoy.
 
-### Notes
-A lightweight, persistent scratchpad. All notes are saved locally, making it the perfect place for quick thoughts, todo lists, or code snippets you want to keep handy.
+### Whiteboard
+A collaborative-ready drawing tool for quick sketches, diagrams, and brainstorming.
+
+### Weather
+Real-time weather updates powered by Open-Meteo. Stay informed about the conditions in your area.
+
+### Calculator
+A sleek, functional calculator for all your mathematical needs.
 
 ## 💻 System Tools
 

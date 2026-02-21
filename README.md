@@ -1,16 +1,17 @@
-# browserOS 🚀 (v1.0.5)
+# browserOS 🚀 (v1.1.0)
 
 Welcome to **browserOS**, a project born from the desire to push the boundaries of what's possible in a web browser. This isn't just another "portfolio site"—it's a fully-fledged, high-performance operating system environment designed for developers, gamers, and power users who live on the web.
 
 ## 🎨 The Vision
 browserOS is built to be fast, beautiful, and functional. We've smashed together the best parts of macOS, Linux, and Windows to create a "vibe" that feels both familiar and futuristic. Whether you're "vibe-coding" with AI in Nexus IDE or slaying demons in Doom, browserOS is your digital playground.
 
-## 🌟 What's New in v1.0.5?
-- **UI Overhaul**: A complete visual refresh. Smoother transitions, better glassmorphism, and a more refined color palette.
-- **The "Start" Experience**: The launcher is no longer just an app; it's an integrated system component that feels like a real OS menu.
-- **Nexus IDE Upgrades**: Improved AI stability and better preview rendering.
-- **Python Everywhere**: Enhanced Python support in the terminal and playground.
-- **Bug Squashing**: Fixed critical issues with Doom and VS Code loading.
+## 🌟 What's New in v1.1.0?
+- **Dock Customization**: Pin and unpin your favorite apps.
+- **Desktop Context Menu**: Right-click anywhere on the desktop for quick actions.
+- **Nexus IDE Pro**: Multi-file support, integrated console, and code downloading.
+- **Window Resizing**: Full control over your workspace layout.
+- **New Apps**: YouTube, Whiteboard, Weather, and more.
+- **Major Fixes**: Doom and VS Code are now fully operational.
 
 ## 🛠️ Core Features
 - **Nexus IDE**: AI-powered development with live preview.
@@ -30,11 +31,18 @@ browserOS is built to be fast, beautiful, and functional. We've smashed together
 - [ ] Terminal-based package manager.
 
 ## 📜 Update Log
-### v1.0.5 (Latest)
+### v1.1.0 (Latest)
+- Added Dock pinning and unpinning.
+- Desktop context menu implementation.
+- Nexus IDE feature expansion (Tabs, Console, Download).
+- Fixed Doom and VS Code loading issues.
+- Version bump to 1.1.0.
+
+### v1.0.5
 - Major UI overhaul and bug fixes.
 - Redesigned Launcher (Start Menu style).
 - Fixed iframe blocking for major apps.
-- Version bump to 1.0.5.
+- Added Whiteboard, Weather, and YouTube apps.
 
 ### v1.0.1
 - Added Nexus IDE and Python Playground.

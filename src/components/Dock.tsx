@@ -2,22 +2,35 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { APPS } from '@/src/apps';
-import { Settings as SettingsIcon, Search } from 'lucide-react';
+import { Settings as SettingsIcon, Search, Pin, PinOff, Play } from 'lucide-react';
+import { ContextMenu } from './ContextMenu';
 
 interface DockProps {
   onLaunch: (appId: string) => void;
   activeAppId?: string;
+  pinnedAppIds: string[];
+  onTogglePin: (appId: string) => void;
 }
 
-export const Dock: React.FC<DockProps> = ({ onLaunch, activeAppId }) => {
+export const Dock: React.FC<DockProps> = ({ onLaunch, activeAppId, pinnedAppIds, onTogglePin }) => {
   const [isLauncherOpen, setIsLauncherOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, appId: string } | null>(null);
 
   const filteredApps = useMemo(() => {
     return APPS.filter(app => 
       app.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery]);
+
+  const dockApps = useMemo(() => {
+    return APPS.filter(app => pinnedAppIds.includes(app.id));
+  }, [pinnedAppIds]);
+
+  const handleContextMenu = (e: React.MouseEvent, appId: string) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, appId });
+  };
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center gap-4">
@@ -62,6 +75,7 @@ export const Dock: React.FC<DockProps> = ({ onLaunch, activeAppId }) => {
                       setSearchQuery('');
                     }}
                     className="flex flex-col items-center gap-2 group"
+                    onContextMenu={(e) => handleContextMenu(e, app.id)}
                   >
                     <div className="w-12 h-12 glass rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all">
                       <app.icon className="w-6 h-6 text-white/80 group-hover:text-white" />
@@ -118,12 +132,13 @@ export const Dock: React.FC<DockProps> = ({ onLaunch, activeAppId }) => {
 
         <div className="w-[1px] h-8 bg-white/10 mx-1" />
 
-        {APPS.map((app) => (
+        {dockApps.map((app) => (
           <motion.button
             key={app.id}
             whileHover={{ scale: 1.2, y: -10 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => onLaunch(app.id)}
+            onContextMenu={(e) => handleContextMenu(e, app.id)}
             className={cn(
               "relative p-3 rounded-xl transition-all group",
               activeAppId === app.id ? "bg-white/10" : "hover:bg-white/5"
@@ -143,6 +158,22 @@ export const Dock: React.FC<DockProps> = ({ onLaunch, activeAppId }) => {
           </motion.button>
         ))}
       </motion.div>
+
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={() => setContextMenu(null)}
+          options={[
+            { 
+              label: pinnedAppIds.includes(contextMenu.appId) ? 'Unpin from Dock' : 'Pin to Dock', 
+              icon: pinnedAppIds.includes(contextMenu.appId) ? <PinOff size={14} /> : <Pin size={14} />,
+              onClick: () => onTogglePin(contextMenu.appId)
+            },
+            { label: 'Open App', icon: <Play size={14} />, onClick: () => onLaunch(contextMenu.appId) }
+          ]}
+        />
+      )}
     </div>
   );
 };

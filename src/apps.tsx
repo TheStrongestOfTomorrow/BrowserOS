@@ -6,7 +6,8 @@ import {
   Settings as SettingsIcon, Cpu, FileText, ChevronRight, 
   Save, Trash2, Image as ImageIcon, Play, Sparkles, 
   Bot, MessageSquare, Key, Send, Layout, Eye, RefreshCw,
-  Puzzle, Terminal as TerminalIcon2, Box
+  Puzzle, Terminal as TerminalIcon2, Box, Youtube, Calculator as CalcIcon,
+  PenTool, CloudSun, Hash, Download, Plus, X as CloseIcon, Terminal as ConsoleIcon
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import Editor from 'react-simple-code-editor';
@@ -17,6 +18,293 @@ import 'prismjs/components/prism-python';
 import 'prismjs/themes/prism-tomorrow.css';
 
 import { useFileSystem } from './hooks/useFileSystem';
+
+// --- YouTube App ---
+const YouTubeApp = () => {
+  const [url, setUrl] = useState('');
+  const [embedUrl, setEmbedUrl] = useState('');
+
+  const handlePlay = () => {
+    try {
+      const videoId = url.split('v=')[1]?.split('&')[0] || url.split('youtu.be/')[1]?.split('?')[0];
+      if (videoId) {
+        setEmbedUrl(`https://www.youtube.com/embed/${videoId}`);
+      } else {
+        alert('Invalid YouTube URL');
+      }
+    } catch (e) {
+      alert('Error parsing URL');
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-zinc-950 text-white">
+      <div className="p-4 flex gap-2 bg-zinc-900 border-b border-white/10">
+        <input 
+          type="text" 
+          placeholder="Paste YouTube URL (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)"
+          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-red-500/50 transition-colors"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <button 
+          onClick={handlePlay}
+          className="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
+        >
+          <Youtube size={16} /> Play
+        </button>
+      </div>
+      <div className="flex-1 bg-black flex items-center justify-center">
+        {embedUrl ? (
+          <iframe 
+            src={embedUrl} 
+            className="w-full h-full" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowFullScreen
+            title="YouTube Video"
+          />
+        ) : (
+          <div className="text-zinc-500 flex flex-col items-center gap-4">
+            <Youtube size={64} className="opacity-20" />
+            <p className="text-sm italic">Enter a video link to start watching</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// --- Calculator App ---
+const CalculatorApp = () => {
+  const [display, setDisplay] = useState('0');
+  const [equation, setEquation] = useState('');
+
+  const handleBtn = (val: string) => {
+    if (val === 'C') {
+      setDisplay('0');
+      setEquation('');
+    } else if (val === '=') {
+      try {
+        // eslint-disable-next-line no-eval
+        const result = eval(equation);
+        setDisplay(String(result));
+        setEquation(String(result));
+      } catch (e) {
+        setDisplay('Error');
+      }
+    } else {
+      const newEq = equation === '0' ? val : equation + val;
+      setEquation(newEq);
+      setDisplay(newEq);
+    }
+  };
+
+  const btns = ['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '=', '+', 'C'];
+
+  return (
+    <div className="h-full bg-zinc-900 p-6 flex flex-col gap-4">
+      <div className="bg-black/40 p-4 rounded-xl text-right border border-white/5">
+        <div className="text-xs text-white/30 h-4">{equation}</div>
+        <div className="text-3xl font-display font-bold text-white truncate">{display}</div>
+      </div>
+      <div className="grid grid-cols-4 gap-2 flex-1">
+        {btns.map(b => (
+          <button 
+            key={b}
+            onClick={() => handleBtn(b)}
+            className={cn(
+              "rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center",
+              ['/', '*', '-', '+', '='].includes(b) ? "bg-orange-500 text-white hover:bg-orange-400" : "bg-white/5 text-white hover:bg-white/10",
+              b === 'C' && "bg-red-500/20 text-red-400 hover:bg-red-500/30",
+              b === '=' && "col-span-1"
+            )}
+          >
+            {b}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// --- Tic-Tac-Toe App ---
+const TicTacToeApp = () => {
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [xIsNext, setXIsNext] = useState(true);
+
+  const calculateWinner = (squares: any[]) => {
+    const lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    for (let i = 0; i < lines.length; i++) {
+      const [a, b, c] = lines[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) return squares[a];
+    }
+    return null;
+  };
+
+  const winner = calculateWinner(board);
+  const status = winner ? `Winner: ${winner}` : board.every(s => s) ? "Draw!" : `Next: ${xIsNext ? 'X' : 'O'}`;
+
+  const handleClick = (i: number) => {
+    if (winner || board[i]) return;
+    const nextBoard = board.slice();
+    nextBoard[i] = xIsNext ? 'X' : 'O';
+    setBoard(nextBoard);
+    setXIsNext(!xIsNext);
+  };
+
+  return (
+    <div className="h-full bg-zinc-950 flex flex-col items-center justify-center p-8">
+      <div className="text-xl font-bold mb-8 text-white/80">{status}</div>
+      <div className="grid grid-cols-3 gap-2 bg-white/10 p-2 rounded-2xl">
+        {board.map((val, i) => (
+          <button 
+            key={i}
+            onClick={() => handleClick(i)}
+            className="w-20 h-20 bg-zinc-900 rounded-xl flex items-center justify-center text-3xl font-bold text-white hover:bg-zinc-800 transition-colors"
+          >
+            <span className={cn(val === 'X' ? "text-blue-400" : "text-red-400")}>{val}</span>
+          </button>
+        ))}
+      </div>
+      <button 
+        onClick={() => { setBoard(Array(9).fill(null)); setXIsNext(true); }}
+        className="mt-8 px-6 py-2 bg-white/5 hover:bg-white/10 rounded-full text-sm font-medium transition-all"
+      >
+        Reset Game
+      </button>
+    </div>
+  );
+};
+
+// --- Whiteboard App ---
+const WhiteboardApp = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [color, setColor] = useState('#ffffff');
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Set canvas size
+    const resize = () => {
+      const parent = canvas.parentElement;
+      if (parent) {
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        ctx.lineCap = 'round';
+        ctx.lineWidth = 3;
+      }
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  const startDrawing = (e: React.MouseEvent) => {
+    setIsDrawing(true);
+    draw(e);
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+    const ctx = canvasRef.current?.getContext('2d');
+    ctx?.beginPath();
+  };
+
+  const draw = (e: React.MouseEvent) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    ctx.strokeStyle = color;
+    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-zinc-900">
+      <div className="p-2 bg-zinc-800 border-b border-white/10 flex gap-4 items-center">
+        <div className="flex gap-2">
+          {['#ffffff', '#ef4444', '#3b82f6', '#10b981', '#eab308'].map(c => (
+            <button 
+              key={c}
+              onClick={() => setColor(c)}
+              className={cn("w-6 h-6 rounded-full border-2", color === c ? "border-white" : "border-transparent")}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+        </div>
+        <button 
+          onClick={() => {
+            const ctx = canvasRef.current?.getContext('2d');
+            if (ctx && canvasRef.current) ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          }}
+          className="text-xs font-bold text-white/50 hover:text-white transition-colors"
+        >
+          Clear
+        </button>
+      </div>
+      <div className="flex-1 relative">
+        <canvas 
+          ref={canvasRef}
+          onMouseDown={startDrawing}
+          onMouseUp={stopDrawing}
+          onMouseMove={draw}
+          className="cursor-crosshair"
+        />
+      </div>
+    </div>
+  );
+};
+
+// --- Weather App ---
+const WeatherApp = () => {
+  const [weather, setWeather] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWeather = async () => {
+      try {
+        // Using Open-Meteo (Free, no key)
+        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current_weather=true');
+        const data = await res.json();
+        setWeather(data.current_weather);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWeather();
+  }, []);
+
+  if (loading) return <div className="h-full flex items-center justify-center text-white/50 animate-pulse">Fetching weather...</div>;
+
+  return (
+    <div className="h-full bg-gradient-to-br from-blue-600 to-indigo-900 p-8 text-white flex flex-col items-center justify-center">
+      <CloudSun size={80} className="mb-4 drop-shadow-2xl" />
+      <div className="text-6xl font-display font-bold mb-2">{weather?.temperature}°C</div>
+      <div className="text-xl opacity-80 mb-8">New York, NY</div>
+      <div className="grid grid-cols-2 gap-8 w-full max-w-xs">
+        <div className="glass p-4 rounded-2xl text-center">
+          <div className="text-[10px] uppercase opacity-50 mb-1">Wind</div>
+          <div className="font-bold">{weather?.windspeed} km/h</div>
+        </div>
+        <div className="glass p-4 rounded-2xl text-center">
+          <div className="text-[10px] uppercase opacity-50 mb-1">Direction</div>
+          <div className="font-bold">{weather?.winddirection}°</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --- Python Playground ---
 const PythonPlayground = () => {
@@ -102,7 +390,9 @@ sys.stdout = io.String()
 
 // --- Nexus IDE ---
 const NexusIDE = () => {
-  const [code, setCode] = useState(`<!DOCTYPE html>
+  const { getPath } = useFileSystem();
+  const [files, setFiles] = useState<{ name: string, content: string, language: string }[]>([
+    { name: 'index.html', language: 'html', content: `<!DOCTYPE html>
 <html>
 <head>
   <style>
@@ -111,15 +401,24 @@ const NexusIDE = () => {
   </style>
 </head>
 <body>
-  <h1>Hello from Nexus IDE!</h1>
+  <h1>Hello from Nexus IDE Pro!</h1>
+  <script>
+    console.log("Nexus IDE Console Initialized");
+  </script>
 </body>
-</html>`);
+</html>` }
+  ]);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [previewUrl, setPreviewUrl] = useState('');
   const [sidebarTab, setSidebarTab] = useState<'explorer' | 'extensions' | 'ai'>('explorer');
   const [aiMode, setAiMode] = useState<'chat' | 'agent' | 'vibe'>('chat');
   const [aiInput, setAiInput] = useState('');
   const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [consoleLogs, setConsoleLogs] = useState<{ type: string, message: string }[]>([]);
+  const [showConsole, setShowConsole] = useState(false);
+
+  const activeFile = files[activeFileIndex];
 
   const [extensions, setExtensions] = useState([
     { id: 'python', name: 'Python Support', description: 'Enable Python linting and execution.', installed: true, icon: Play },
@@ -129,14 +428,62 @@ const NexusIDE = () => {
   ]);
 
   const updatePreview = useCallback(() => {
-    const blob = new Blob([code], { type: 'text/html' });
+    const htmlFile = files.find(f => f.name.endsWith('.html'));
+    if (!htmlFile) return;
+
+    // Inject console.log capture script
+    const injectedScript = `
+      <script>
+        const oldLog = console.log;
+        console.log = function(...args) {
+          window.parent.postMessage({ type: 'nexus-console', method: 'log', args: args.map(String) }, '*');
+          oldLog.apply(console, args);
+        };
+        window.onerror = function(msg, url, line) {
+          window.parent.postMessage({ type: 'nexus-console', method: 'error', args: [msg + " (line " + line + ")"] }, '*');
+        };
+      </script>
+    `;
+    
+    const content = htmlFile.content.replace('</head>', `${injectedScript}</head>`);
+    const blob = new Blob([content], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     setPreviewUrl(url);
-  }, [code]);
+  }, [files]);
 
   useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'nexus-console') {
+        setConsoleLogs(prev => [...prev, { type: e.data.method, message: e.data.args.join(' ') }].slice(-50));
+      }
+    };
+    window.addEventListener('message', handleMessage);
     updatePreview();
+    return () => window.removeEventListener('message', handleMessage);
   }, [updatePreview]);
+
+  const downloadCode = () => {
+    const blob = new Blob([activeFile.content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = activeFile.name;
+    a.click();
+  };
+
+  const addFile = () => {
+    const name = prompt('Enter file name (e.g. style.css):');
+    if (name) {
+      setFiles(prev => [...prev, { name, content: '', language: name.split('.').pop() || 'text' }]);
+      setActiveFileIndex(files.length);
+    }
+  };
+
+  const closeFile = (index: number) => {
+    if (files.length === 1) return;
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    if (activeFileIndex >= index) setActiveFileIndex(Math.max(0, activeFileIndex - 1));
+  };
 
   const handleAiAction = async () => {
     if (!aiInput.trim()) return;
@@ -163,13 +510,13 @@ const NexusIDE = () => {
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const result = await ai.models.generateContent({
           model: settings.model || 'gemini-3-flash-preview',
-          contents: [{ parts: [{ text: `You are an expert web developer. Current code:\n${code}\n\nUser request: ${aiInput}\n\nProvide the full updated code only, no explanation.` }] }]
+          contents: [{ parts: [{ text: `You are an expert web developer. Current code:\n${activeFile.content}\n\nUser request: ${aiInput}\n\nProvide the full updated code only, no explanation.` }] }]
         });
         responseText = result.text || "Error generating response";
         if (aiMode === 'vibe' || aiMode === 'agent') {
-          const codeMatch = responseText.match(/```(?:html)?([\s\S]*?)```/);
-          if (codeMatch) setCode(codeMatch[1].trim());
-          else setCode(responseText.trim());
+          const codeMatch = responseText.match(/```(?:html|javascript|css|python)?([\s\S]*?)```/);
+          const newContent = codeMatch ? codeMatch[1].trim() : responseText.trim();
+          setFiles(prev => prev.map((f, i) => i === activeFileIndex ? { ...f, content: newContent } : f));
         }
       } else {
         const endpoint = provider === 'openai' 
@@ -228,6 +575,13 @@ const NexusIDE = () => {
         </button>
         <div className="flex-1" />
         <button 
+          onClick={downloadCode}
+          className="p-2 hover:bg-white/10 rounded text-zinc-400"
+          title="Download Active File"
+        >
+          <Download size={20} />
+        </button>
+        <button 
           onClick={() => {
             const provider = prompt('Enter Provider (openai/anthropic/google):', 'google');
             const key = prompt('Enter API Key (leave empty for google):', '');
@@ -249,10 +603,15 @@ const NexusIDE = () => {
             exit={{ width: 0, opacity: 0 }}
             className="bg-[#252526] border-r border-white/10 overflow-hidden flex flex-col"
           >
-            <div className="p-4 border-b border-white/5">
+            <div className="p-4 border-b border-white/5 flex justify-between items-center">
               <h3 className="text-[10px] uppercase font-bold tracking-widest opacity-50">
                 {sidebarTab === 'explorer' ? 'Explorer' : 'Extensions'}
               </h3>
+              {sidebarTab === 'explorer' && (
+                <button onClick={addFile} className="p-1 hover:bg-white/10 rounded text-white/50 hover:text-white">
+                  <Plus size={14} />
+                </button>
+              )}
             </div>
             
             <div className="flex-1 overflow-auto p-2">
@@ -268,10 +627,25 @@ const NexusIDE = () => {
                     <Folder size={14} className="text-blue-400" />
                     <span>user</span>
                   </div>
-                  <div className="flex items-center gap-2 p-2 bg-white/10 rounded cursor-pointer text-xs pl-10">
-                    <Code size={14} className="text-orange-400" />
-                    <span>index.html</span>
-                  </div>
+                  {files.map((file, i) => (
+                    <div 
+                      key={file.name}
+                      onClick={() => setActiveFileIndex(i)}
+                      className={cn(
+                        "flex items-center gap-2 p-2 rounded cursor-pointer text-xs pl-10 group",
+                        activeFileIndex === i ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/5"
+                      )}
+                    >
+                      <Code size={14} className={cn(file.name.endsWith('.html') ? "text-orange-400" : "text-blue-400")} />
+                      <span className="flex-1 truncate">{file.name}</span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); closeFile(i); }}
+                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-white/10 rounded"
+                      >
+                        <CloseIcon size={12} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -306,21 +680,67 @@ const NexusIDE = () => {
 
       {/* Editor & Preview */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Tabs */}
+        <div className="flex bg-[#252526] overflow-x-auto no-scrollbar border-b border-white/5">
+          {files.map((file, i) => (
+            <button
+              key={file.name}
+              onClick={() => setActiveFileIndex(i)}
+              className={cn(
+                "px-4 py-2 text-xs flex items-center gap-2 border-r border-white/5 min-w-[120px] transition-colors",
+                activeFileIndex === i ? "bg-[#1e1e1e] border-t-2 border-t-blue-500" : "opacity-50 hover:bg-white/5"
+              )}
+            >
+              <Code size={12} />
+              <span className="truncate">{file.name}</span>
+              <CloseIcon 
+                size={12} 
+                className="ml-auto hover:text-red-400" 
+                onClick={(e) => { e.stopPropagation(); closeFile(i); }}
+              />
+            </button>
+          ))}
+        </div>
+
         <div className="flex-1 flex min-h-0">
           <div className="flex-1 flex flex-col border-r border-white/10">
             <div className="p-2 bg-[#252526] text-[10px] uppercase tracking-widest opacity-50 flex justify-between items-center">
-              Editor
-              <button onClick={updatePreview} className="hover:text-white"><RefreshCw size={12} /></button>
+              Editor - {activeFile.name}
+              <div className="flex gap-2">
+                <button onClick={() => setShowConsole(!showConsole)} className={cn("hover:text-white", showConsole && "text-blue-400")}>
+                  <ConsoleIcon size={12} />
+                </button>
+                <button onClick={updatePreview} className="hover:text-white"><RefreshCw size={12} /></button>
+              </div>
             </div>
             <div className="flex-1 overflow-auto p-4 font-mono text-sm">
               <Editor
-                value={code}
-                onValueChange={setCode}
-                highlight={code => highlight(code, languages.javascript, 'javascript')}
+                value={activeFile.content}
+                onValueChange={(content) => setFiles(prev => prev.map((f, i) => i === activeFileIndex ? { ...f, content } : f))}
+                highlight={content => highlight(content, languages[activeFile.language as keyof typeof languages] || languages.javascript, activeFile.language)}
                 padding={10}
                 style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 13 }}
               />
             </div>
+            
+            {/* Console */}
+            {showConsole && (
+              <div className="h-1/3 bg-black/40 border-t border-white/10 flex flex-col">
+                <div className="p-2 bg-black/20 text-[10px] uppercase tracking-widest opacity-50 flex justify-between items-center">
+                  Console
+                  <button onClick={() => setConsoleLogs([])} className="hover:text-white">Clear</button>
+                </div>
+                <div className="flex-1 overflow-auto p-2 font-mono text-[11px] space-y-1 no-scrollbar">
+                  {consoleLogs.map((log, i) => (
+                    <div key={i} className={cn("flex gap-2", log.type === 'error' ? "text-red-400" : "text-white/70")}>
+                      <span className="opacity-30">[{new Date().toLocaleTimeString()}]</span>
+                      <span>{log.message}</span>
+                    </div>
+                  ))}
+                  {consoleLogs.length === 0 && <div className="text-white/20 italic">No logs yet...</div>}
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex-1 flex flex-col">
             <div className="p-2 bg-[#252526] text-[10px] uppercase tracking-widest opacity-50">Preview</div>
@@ -627,11 +1047,16 @@ const NotesApp = () => {
 
 export const APPS = [
   { id: 'nexus', name: 'Nexus IDE', icon: Code, component: NexusIDE, defaultWidth: 1100, defaultHeight: 750 },
+  { id: 'youtube', name: 'YouTube', icon: Youtube, component: YouTubeApp, defaultWidth: 900, defaultHeight: 600 },
   { id: 'python', name: 'Python Playground', icon: Play, component: PythonPlayground, defaultWidth: 800, defaultHeight: 600 },
   { id: 'terminal', name: 'Terminal', icon: TerminalIcon, component: TerminalApp, defaultWidth: 600, defaultHeight: 400 },
   { id: 'explorer', name: 'Files', icon: Folder, component: FileExplorerApp, defaultWidth: 700, defaultHeight: 500 },
-  { id: 'vscode', name: 'VS Code', icon: Code, component: () => <iframe src="https://vscode.dev" className="w-full h-full border-none bg-[#1e1e1e]" title="VS Code" allow="clipboard-read; clipboard-write" /> , defaultWidth: 1000, defaultHeight: 700 },
-  { id: 'doom', name: 'Doom', icon: Gamepad2, component: () => <iframe src="https://dos.zone/player/?bundleUrl=https%3A%2F%2Fcdn.dos.zone%2Fcustom%2Fdos%2Fdoom.jsdos?anonymous=1" className="w-full h-full border-none bg-black" title="Doom" allow="autoplay; gamepad" />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'vscode', name: 'VS Code', icon: Code, component: () => <iframe src="https://vscode.dev/?theme=dark" className="w-full h-full border-none bg-[#1e1e1e]" title="VS Code" allow="clipboard-read; clipboard-write; fullscreen" /> , defaultWidth: 1000, defaultHeight: 700 },
+  { id: 'doom', name: 'Doom', icon: Gamepad2, component: () => <iframe src="https://js-dos.com/games/doom.exe.html" className="w-full h-full border-none bg-black" title="Doom" allow="autoplay; gamepad; fullscreen" />, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'whiteboard', name: 'Whiteboard', icon: PenTool, component: WhiteboardApp, defaultWidth: 800, defaultHeight: 600 },
+  { id: 'calculator', name: 'Calculator', icon: CalcIcon, component: CalculatorApp, defaultWidth: 320, defaultHeight: 450 },
+  { id: 'tictactoe', name: 'Tic-Tac-Toe', icon: Hash, component: TicTacToeApp, defaultWidth: 400, defaultHeight: 500 },
+  { id: 'weather', name: 'Weather', icon: CloudSun, component: WeatherApp, defaultWidth: 400, defaultHeight: 500 },
   { id: 'browser', name: 'Browser', icon: Globe, component: () => <iframe src="https://www.wikipedia.org" className="w-full h-full border-none bg-white" title="Browser" />, defaultWidth: 900, defaultHeight: 600 },
   { id: 'system', name: 'System', icon: Cpu, component: SystemMonitorApp, defaultWidth: 600, defaultHeight: 450 },
   { id: 'notes', name: 'Notes', icon: FileText, component: NotesApp, defaultWidth: 400, defaultHeight: 500 },

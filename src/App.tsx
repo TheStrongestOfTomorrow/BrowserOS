@@ -2,15 +2,25 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Window } from './components/Window';
 import { Dock } from './components/Dock';
+import { ContextMenu } from './components/ContextMenu';
 import { APPS } from './apps';
 import { WindowState, WindowId } from './types';
-import { Monitor, Battery, Wifi, Volume2, Search, Calendar } from 'lucide-react';
+import { Monitor, Battery, Wifi, Volume2, Search, Calendar, RefreshCw, Wallpaper, Info } from 'lucide-react';
 
 export default function App() {
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [focusedId, setFocusedId] = useState<WindowId | null>(null);
   const [time, setTime] = useState(new Date());
   const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('browseros-wallpaper') || 'https://picsum.photos/id/10/1920/1080');
+  const [pinnedAppIds, setPinnedAppIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('browseros-pinned-apps');
+    return saved ? JSON.parse(saved) : ['nexus', 'terminal', 'explorer', 'browser'];
+  });
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, options: any[] } | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('browseros-pinned-apps', JSON.stringify(pinnedAppIds));
+  }, [pinnedAppIds]);
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -82,8 +92,35 @@ export default function App() {
     });
   };
 
+  const resizeWindow = (id: string, width: number, height: number) => {
+    setWindows(prev => prev.map(w => w.id === id ? { ...w, width, height } : w));
+  };
+
+  const togglePin = (appId: string) => {
+    setPinnedAppIds(prev => 
+      prev.includes(appId) ? prev.filter(id => id !== appId) : [...prev, appId]
+    );
+  };
+
+  const handleDesktopContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      options: [
+        { label: 'Refresh', icon: <RefreshCw size={14} />, onClick: () => window.location.reload() },
+        { label: 'Change Wallpaper', icon: <Wallpaper size={14} />, onClick: () => launchApp('settings') },
+        { label: 'System Info', icon: <Info size={14} />, onClick: () => launchApp('system') },
+      ]
+    });
+  };
+
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url("${wallpaper}?blur=2")` }}>
+    <div 
+      className="relative w-screen h-screen overflow-hidden bg-cover bg-center transition-all duration-1000" 
+      style={{ backgroundImage: `url("${wallpaper}?blur=2")` }}
+      onContextMenu={handleDesktopContextMenu}
+    >
       {/* Desktop Background Overlay */}
       <div className="absolute inset-0 bg-black/20" />
 
@@ -141,6 +178,7 @@ export default function App() {
                 onMinimize={minimizeWindow}
                 onFocus={focusWindow}
                 onToggleMaximize={toggleMaximize}
+                onResize={resizeWindow}
               >
                 {win.content}
               </Window>
@@ -150,7 +188,22 @@ export default function App() {
       </div>
 
       {/* Dock */}
-      <Dock onLaunch={launchApp} activeAppId={focusedId || undefined} />
+      <Dock 
+        onLaunch={launchApp} 
+        activeAppId={focusedId || undefined} 
+        pinnedAppIds={pinnedAppIds}
+        onTogglePin={togglePin}
+      />
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          options={contextMenu.options}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </div>
   );
 }

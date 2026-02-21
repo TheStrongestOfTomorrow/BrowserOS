@@ -10,6 +10,7 @@ interface WindowProps {
   onMinimize: (id: string) => void;
   onFocus: (id: string) => void;
   onToggleMaximize: (id: string) => void;
+  onResize: (id: string, width: number, height: number) => void;
   children: React.ReactNode;
 }
 
@@ -19,10 +20,37 @@ export const Window: React.FC<WindowProps> = ({
   onMinimize, 
   onFocus, 
   onToggleMaximize,
+  onResize,
   children 
 }) => {
   const controls = useDragControls();
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+
+  const handleResize = (e: React.MouseEvent) => {
+    if (!isResizing) return;
+    const newWidth = Math.max(300, e.clientX - (window.x || 0));
+    const newHeight = Math.max(200, e.clientY - (window.y || 0));
+    onResize(window.id, newWidth, newHeight);
+  };
+
+  useEffect(() => {
+    if (isResizing) {
+      const onMouseMove = (e: MouseEvent) => {
+        const newWidth = Math.max(300, e.clientX - (window.x || 0));
+        const newHeight = Math.max(200, e.clientY - (window.y || 0));
+        onResize(window.id, newWidth, newHeight);
+      };
+      const onMouseUp = () => setIsResizing(false);
+      
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+    }
+  }, [isResizing, window.id, window.x, window.y, onResize]);
 
   if (window.isMinimized) return null;
 
@@ -88,9 +116,22 @@ export const Window: React.FC<WindowProps> = ({
       <div className="flex-1 overflow-auto relative bg-black/20">
         {children}
         {/* Focus Overlay for iframes when not focused */}
-        {/* This is a trick to allow dragging over iframes */}
         {isDragging && <div className="absolute inset-0 z-50" />}
+        {isResizing && <div className="absolute inset-0 z-50" />}
       </div>
+
+      {/* Resize Handle */}
+      {!window.isMaximized && (
+        <div 
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-[60] flex items-center justify-center group"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setIsResizing(true);
+          }}
+        >
+          <div className="w-1.5 h-1.5 bg-white/20 rounded-full group-hover:bg-white/50 transition-colors" />
+        </div>
+      )}
     </motion.div>
   );
 };
