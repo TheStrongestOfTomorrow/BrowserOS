@@ -16,6 +16,25 @@ export const Dock: React.FC<DockProps> = ({ onLaunch, activeAppId }) => {
         animate={{ y: 0 }}
         className="glass rounded-2xl px-3 py-2 flex items-center gap-2"
       >
+        <motion.button
+          whileHover={{ scale: 1.2, y: -10 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => onLaunch('launcher')}
+          className="relative p-3 rounded-xl transition-all group hover:bg-white/10"
+        >
+          <div className="grid grid-cols-2 gap-0.5 w-6 h-6 place-items-center">
+            <div className="w-2 h-2 bg-white/70 rounded-sm" />
+            <div className="w-2 h-2 bg-white/70 rounded-sm" />
+            <div className="w-2 h-2 bg-white/70 rounded-sm" />
+            <div className="w-2 h-2 bg-white/70 rounded-sm" />
+          </div>
+          <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-[10px] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10">
+            Apps
+          </div>
+        </motion.button>
+
+        <div className="w-[1px] h-8 bg-white/10 mx-1" />
+
         {APPS.map((app) => (
           <motion.button
             key={app.id}

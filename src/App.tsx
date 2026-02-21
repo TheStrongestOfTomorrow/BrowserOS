@@ -46,14 +46,14 @@ export default function App() {
       icon: appId,
       isOpen: true,
       isMinimized: false,
-      isMaximized: false,
+      isMaximized: appId === 'launcher', // Launcher should be big
       zIndex: Math.max(...windows.map(w => w.zIndex), 0) + 1,
       type: 'app',
-      content: <app.component />,
+      content: <app.component onLaunch={launchApp} />,
       width: app.defaultWidth || 600,
       height: app.defaultHeight || 400,
-      x: 100 + windows.length * 30,
-      y: 100 + windows.length * 30,
+      x: appId === 'launcher' ? 0 : 100 + windows.length * 30,
+      y: appId === 'launcher' ? 0 : 100 + windows.length * 30,
     };
 
     setWindows(prev => [...prev, newWindow]);
@@ -96,24 +96,6 @@ export default function App() {
           >
             <Monitor size={14} />
             <span>browserOS</span>
-          </button>
-          
-          <div className="h-4 w-[1px] bg-white/10 mx-1" />
-          
-          <button 
-            className="px-2 py-0.5 hover:bg-white/10 rounded transition-colors flex items-center gap-1.5"
-            onClick={() => {
-              // Toggle a simple app menu or just launch settings for now
-              launchApp('explorer');
-            }}
-          >
-            <div className="grid grid-cols-2 gap-0.5">
-              <div className="w-1 h-1 bg-white/70 rounded-full" />
-              <div className="w-1 h-1 bg-white/70 rounded-full" />
-              <div className="w-1 h-1 bg-white/70 rounded-full" />
-              <div className="w-1 h-1 bg-white/70 rounded-full" />
-            </div>
-            <span>Apps</span>
           </button>
         </div>
 
