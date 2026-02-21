@@ -59,13 +59,53 @@ export function useFileSystem() {
   }, [fs]);
 
   const writeFile = useCallback((path: string, content: string) => {
-    // Simplified write logic for demo
     setFs(prev => {
-      const newFs = [...prev];
-      // Logic to find and update file would go here
+      const newFs = JSON.parse(JSON.stringify(prev)); // Deep clone
+      const parts = path.split('/').filter(Boolean);
+      const fileName = parts.pop();
+      if (!fileName) return prev;
+
+      let current: FileNode = { name: 'root', type: 'directory', children: newFs };
+      for (const part of parts) {
+        const next = current.children?.find(child => child.name === part && child.type === 'directory');
+        if (!next) return prev; // Path not found
+        current = next;
+      }
+
+      if (!current.children) current.children = [];
+      const existingFile = current.children.find(child => child.name === fileName && child.type === 'file');
+      if (existingFile) {
+        existingFile.content = content;
+      } else {
+        current.children.push({ name: fileName, type: 'file', content });
+      }
+
       return newFs;
     });
   }, []);
 
-  return { fs, getPath, writeFile };
+  const mkdir = useCallback((path: string) => {
+    setFs(prev => {
+      const newFs = JSON.parse(JSON.stringify(prev));
+      const parts = path.split('/').filter(Boolean);
+      const dirName = parts.pop();
+      if (!dirName) return prev;
+
+      let current: FileNode = { name: 'root', type: 'directory', children: newFs };
+      for (const part of parts) {
+        const next = current.children?.find(child => child.name === part && child.type === 'directory');
+        if (!next) return prev;
+        current = next;
+      }
+
+      if (!current.children) current.children = [];
+      if (!current.children.find(child => child.name === dirName)) {
+        current.children.push({ name: dirName, type: 'directory', children: [] });
+      }
+
+      return newFs;
+    });
+  }, []);
+
+  return { fs, getPath, writeFile, mkdir };
 }

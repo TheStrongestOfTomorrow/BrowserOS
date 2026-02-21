@@ -1,17 +1,17 @@
-# browserOS 🚀 (v1.1.0)
+# browserOS 🚀 (v1.1.1)
 
 Welcome to **browserOS**, a project born from the desire to push the boundaries of what's possible in a web browser. This isn't just another "portfolio site"—it's a fully-fledged, high-performance operating system environment designed for developers, gamers, and power users who live on the web.
 
 ## 🎨 The Vision
 browserOS is built to be fast, beautiful, and functional. We've smashed together the best parts of macOS, Linux, and Windows to create a "vibe" that feels both familiar and futuristic. Whether you're "vibe-coding" with AI in Nexus IDE or slaying demons in Doom, browserOS is your digital playground.
 
-## 🌟 What's New in v1.1.0?
-- **Dock Customization**: Pin and unpin your favorite apps.
-- **Desktop Context Menu**: Right-click anywhere on the desktop for quick actions.
-- **Nexus IDE Pro**: Multi-file support, integrated console, and code downloading.
-- **Window Resizing**: Full control over your workspace layout.
-- **New Apps**: YouTube, Whiteboard, Weather, and more.
-- **Major Fixes**: Doom and VS Code are now fully operational.
+## 🌟 What's New in v1.1.1? (The Developer Update)
+- **Nexus IDE Pro+**: Added "Vibe Mode" for immersive AI coding, multi-file support, and integrated console.
+- **API Tester**: A built-in tool for testing REST endpoints directly from the OS.
+- **JSON Tool**: Quick format and minify utility for data structures.
+- **Terminal Pro**: Added `mkdir`, `touch`, `cat`, `date`, and `whoami`.
+- **Real Filesystem**: Persistent file creation and directory management.
+- **Minor Bug Fixes**: Improved iframe stability and window management.
 
 ## 🛠️ Core Features
 - **Nexus IDE**: AI-powered development with live preview.
@@ -31,12 +31,18 @@ browserOS is built to be fast, beautiful, and functional. We've smashed together
 - [ ] Terminal-based package manager.
 
 ## 📜 Update Log
-### v1.1.0 (Latest)
+### v1.1.1 (Latest)
+- "The Developer Update"
+- Added API Tester and JSON Tool.
+- Nexus IDE "Vibe Mode" and multi-file enhancements.
+- Terminal command expansion.
+- Real persistent filesystem logic.
+
+### v1.1.0
 - Added Dock pinning and unpinning.
 - Desktop context menu implementation.
 - Nexus IDE feature expansion (Tabs, Console, Download).
 - Fixed Doom and VS Code loading issues.
-- Version bump to 1.1.0.
 
 ### v1.0.5
 - Major UI overhaul and bug fixes.

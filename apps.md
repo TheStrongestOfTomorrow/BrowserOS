@@ -1,16 +1,23 @@
 # browserOS Application Suite 📦
 
-Detailed breakdown of the built-in applications available in browserOS v1.1.0.
+Detailed breakdown of the built-in applications available in browserOS v1.1.1.
 
 ## 🛠️ Productivity
 
-### Nexus IDE Pro
+### Nexus IDE Pro+
 The crown jewel of browserOS. A full-featured integrated development environment that supports:
+- **Vibe Mode**: Immersive AI-assisted coding experience.
 - **Multi-file Tabs**: Work on multiple files simultaneously.
 - **Integrated Console**: Debug your JavaScript code in real-time.
 - **Live Preview**: Real-time rendering of HTML/CSS/JS.
 - **AI Integration**: Bring your own keys for OpenAI, Anthropic, or use the built-in Google Gemini support.
 - **Download**: Export your projects as local files.
+
+### API Tester
+A developer-focused tool for testing REST APIs. Supports GET, POST, PUT, and DELETE methods with a clean JSON response viewer.
+
+### JSON Tool
+A utility for formatting and minifying JSON data. Essential for web developers handling large data structures.
 
 ### YouTube
 A dedicated video player that embeds YouTube content directly. Just paste a link and enjoy.

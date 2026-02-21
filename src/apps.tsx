@@ -7,7 +7,8 @@ import {
   Save, Trash2, Image as ImageIcon, Play, Sparkles, 
   Bot, MessageSquare, Key, Send, Layout, Eye, RefreshCw,
   Puzzle, Terminal as TerminalIcon2, Box, Youtube, Calculator as CalcIcon,
-  PenTool, CloudSun, Hash, Download, Plus, X as CloseIcon, Terminal as ConsoleIcon
+  PenTool, CloudSun, Hash, Download, Plus, X as CloseIcon, Terminal as ConsoleIcon,
+  Globe2, Braces, Wand2
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import Editor from 'react-simple-code-editor';
@@ -306,6 +307,99 @@ const WeatherApp = () => {
   );
 };
 
+// --- API Tester App ---
+const APITesterApp = () => {
+  const [url, setUrl] = useState('https://jsonplaceholder.typicode.com/todos/1');
+  const [method, setMethod] = useState('GET');
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSend = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(url, { method });
+      const data = await res.json();
+      setResponse(JSON.stringify(data, null, 2));
+    } catch (err: any) {
+      setResponse(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-zinc-950 text-white p-4 gap-4">
+      <div className="flex gap-2">
+        <select 
+          value={method} 
+          onChange={(e) => setMethod(e.target.value)}
+          className="bg-zinc-800 border border-white/10 rounded-lg px-2 py-1 text-xs outline-none"
+        >
+          {['GET', 'POST', 'PUT', 'DELETE'].map(m => <option key={m} value={m}>{m}</option>)}
+        </select>
+        <input 
+          type="text" 
+          value={url} 
+          onChange={(e) => setUrl(e.target.value)}
+          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-xs outline-none focus:border-blue-500/50"
+        />
+        <button 
+          onClick={handleSend}
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-500 px-4 py-1 rounded-lg text-xs font-bold disabled:opacity-50"
+        >
+          {loading ? 'Sending...' : 'Send'}
+        </button>
+      </div>
+      <div className="flex-1 bg-black/40 rounded-xl border border-white/5 p-4 font-mono text-xs overflow-auto no-scrollbar">
+        <pre className="text-blue-400">{response || 'Response will appear here...'}</pre>
+      </div>
+    </div>
+  );
+};
+
+// --- JSON Tool App ---
+const JSONToolApp = () => {
+  const [input, setInput] = useState('');
+  const [output, setOutput] = useState('');
+
+  const format = () => {
+    try {
+      setOutput(JSON.stringify(JSON.parse(input), null, 2));
+    } catch (e) {
+      setOutput('Invalid JSON');
+    }
+  };
+
+  const minify = () => {
+    try {
+      setOutput(JSON.stringify(JSON.parse(input)));
+    } catch (e) {
+      setOutput('Invalid JSON');
+    }
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-zinc-950 text-white p-4 gap-4">
+      <div className="flex-1 grid grid-cols-2 gap-4">
+        <textarea 
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Paste JSON here..."
+          className="bg-white/5 border border-white/10 rounded-xl p-4 font-mono text-xs outline-none focus:border-blue-500/50 resize-none"
+        />
+        <div className="bg-black/40 border border-white/10 rounded-xl p-4 font-mono text-xs overflow-auto no-scrollbar whitespace-pre text-emerald-400">
+          {output || 'Output will appear here...'}
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <button onClick={format} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-xs font-bold transition-all">Format</button>
+        <button onClick={minify} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-xs font-bold transition-all">Minify</button>
+      </div>
+    </div>
+  );
+};
+
 // --- Python Playground ---
 const PythonPlayground = () => {
   const [code, setCode] = useState('print("Hello from browserOS Python!")\n\nfor i in range(5):\n    print(f"Count: {i}")');
@@ -412,6 +506,7 @@ const NexusIDE = () => {
   const [previewUrl, setPreviewUrl] = useState('');
   const [sidebarTab, setSidebarTab] = useState<'explorer' | 'extensions' | 'ai'>('explorer');
   const [aiMode, setAiMode] = useState<'chat' | 'agent' | 'vibe'>('chat');
+  const [vibeMode, setVibeMode] = useState(false);
   const [aiInput, setAiInput] = useState('');
   const [aiMessages, setAiMessages] = useState<{ role: 'user' | 'ai', content: string }[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -760,8 +855,18 @@ const NexusIDE = () => {
           >
             <div className="p-4 border-b border-white/10">
               <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="text-purple-400" size={18} />
+                <Sparkles className={cn("text-purple-400 transition-all", vibeMode && "animate-pulse scale-125")} size={18} />
                 <span className="font-bold text-sm">Nexus AI</span>
+                <button 
+                  onClick={() => setVibeMode(!vibeMode)}
+                  className={cn(
+                    "ml-auto p-1 rounded transition-all",
+                    vibeMode ? "bg-purple-500 text-white" : "bg-white/5 text-white/30 hover:text-white/50"
+                  )}
+                  title="Toggle Vibe Mode"
+                >
+                  <Wand2 size={12} />
+                </button>
               </div>
               <div className="flex p-1 bg-black/20 rounded-lg gap-1">
                 {(['chat', 'agent', 'vibe'] as const).map(mode => (
@@ -813,8 +918,8 @@ const NexusIDE = () => {
 
 // --- Terminal App ---
 const TerminalApp = () => {
-  const { getPath } = useFileSystem();
-  const [history, setHistory] = useState<string[]>(['Welcome to browserOS v1.0.5', 'Type "help" for commands.']);
+  const { getPath, writeFile, mkdir } = useFileSystem();
+  const [history, setHistory] = useState<string[]>(['Welcome to browserOS v1.1.1 (Developer Update)', 'Type "help" for commands.']);
   const [input, setInput] = useState('');
   const [currentDir, setCurrentDir] = useState('/home/user');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -835,7 +940,16 @@ const TerminalApp = () => {
 
     switch (baseCmd) {
       case 'help':
-        response = 'Available commands: help, ls, clear, date, whoami, echo, python, neofetch, reboot, pwd, cd';
+        response = 'Available commands: help, ls, clear, date, whoami, echo, python, neofetch, reboot, pwd, cd, mkdir, touch, cat';
+        break;
+      case 'date':
+        response = new Date().toString();
+        break;
+      case 'whoami':
+        response = 'user';
+        break;
+      case 'echo':
+        response = parts.slice(1).join(' ');
         break;
       case 'pwd':
         response = currentDir;
@@ -857,6 +971,28 @@ const TerminalApp = () => {
           response = '';
         } else {
           response = `cd: no such directory: ${target}`;
+        }
+        break;
+      case 'mkdir':
+        if (!parts[1]) response = 'mkdir: missing operand';
+        else {
+          mkdir(`${currentDir}/${parts[1]}`);
+          response = '';
+        }
+        break;
+      case 'touch':
+        if (!parts[1]) response = 'touch: missing operand';
+        else {
+          writeFile(`${currentDir}/${parts[1]}`, '');
+          response = '';
+        }
+        break;
+      case 'cat':
+        if (!parts[1]) response = 'cat: missing operand';
+        else {
+          const file = getPath(`${currentDir}/${parts[1]}`);
+          if (file && file.type === 'file') response = file.content || '';
+          else response = `cat: ${parts[1]}: No such file`;
         }
         break;
       case 'clear':
@@ -888,10 +1024,10 @@ const TerminalApp = () => {
         break;
       case 'neofetch':
         response = `
-   .---.      OS: browserOS v1.0.5
+   .---.      OS: browserOS v1.1.1
   /     \\     Kernel: WebKit/Blink Hybrid
-  | (O) |     Uptime: 5 minutes
-  \\     /     Packages: 45 (npm)
+  | (O) |     Uptime: 12 minutes
+  \\     /     Packages: 52 (npm)
    '---'      Shell: browser-sh
         `;
         break;
@@ -1047,6 +1183,8 @@ const NotesApp = () => {
 
 export const APPS = [
   { id: 'nexus', name: 'Nexus IDE', icon: Code, component: NexusIDE, defaultWidth: 1100, defaultHeight: 750 },
+  { id: 'api-tester', name: 'API Tester', icon: Globe2, component: APITesterApp, defaultWidth: 600, defaultHeight: 500 },
+  { id: 'json-tool', name: 'JSON Tool', icon: Braces, component: JSONToolApp, defaultWidth: 600, defaultHeight: 500 },
   { id: 'youtube', name: 'YouTube', icon: Youtube, component: YouTubeApp, defaultWidth: 900, defaultHeight: 600 },
   { id: 'python', name: 'Python Playground', icon: Play, component: PythonPlayground, defaultWidth: 800, defaultHeight: 600 },
   { id: 'terminal', name: 'Terminal', icon: TerminalIcon, component: TerminalApp, defaultWidth: 600, defaultHeight: 400 },
