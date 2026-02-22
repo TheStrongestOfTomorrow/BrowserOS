@@ -679,9 +679,23 @@ const NexusIDE = () => {
   </script>
 </body>
 </html>` },
-    { name: 'README.md', language: 'markdown', content: `# Nexus IDE Pro
+    { name: 'README.md', language: 'markdown', content: `# Nexus IDE Pro V1.2.0 🚀
 
 Welcome to Nexus IDE Pro, the most advanced web-based development environment designed for the modern developer.
+
+## 🚀 What's New in V1.2.0
+- **AI App Creator**: Generate entire applications from a single prompt.
+- **Enhanced AI Providers**: Now supporting Mistral and Groq for ultra-fast inference.
+- **GitHub Integration 2.0**: Create repositories directly from the IDE.
+- **Performance Boost**: Optimized editor and preview engine.
+
+## 🗺️ Roadmap (V1.3.0 & Beyond)
+- [ ] **Real-time Collaboration**: Code together with your team in real-time.
+- [ ] **Cloud Sync**: Sync your workspace across all your devices seamlessly.
+- [ ] **Native Mobile Apps**: Export your web apps as native Android/iOS binaries.
+- [ ] **Extension Marketplace**: A dedicated store for community-built extensions.
+- [ ] **Debugger Pro**: Advanced step-through debugging for JavaScript and Python.
+- [ ] **Terminal SSH**: Connect to your remote servers directly from the terminal.
 
 ## Table of Contents
 
@@ -858,6 +872,49 @@ We welcome contributions! Please see our CONTRIBUTING.md for guidelines on how t
       }
     } catch (err: any) {
       alert(`Error: ${err.message}`);
+    }
+  };
+
+  const createAppWithAi = async () => {
+    const promptText = prompt('Describe the application you want to create:');
+    if (!promptText) return;
+
+    setIsAiLoading(true);
+    try {
+      const settings = JSON.parse(localStorage.getItem('nexus-settings') || '{"provider":"google","model":"gemini-3-flash-preview"}');
+      const provider = settings.provider || 'google';
+      const apiKey = settings.apiKey;
+
+      let responseText = "";
+      if (provider === 'google') {
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const result = await ai.models.generateContent({
+          model: settings.model || 'gemini-3-flash-preview',
+          contents: [{ parts: [{ text: `Create a complete web application based on this description: ${promptText}. Provide the code for index.html, style.css, and script.js. Format your response as a JSON object with keys "html", "css", and "js".` }] }],
+          config: { responseMimeType: 'application/json' }
+        });
+        responseText = result.text || "{}";
+      } else {
+        // Fallback for other providers
+        alert('AI App Creator currently only supports Google Gemini. Please switch provider in settings.');
+        setIsAiLoading(false);
+        return;
+      }
+
+      const appData = JSON.parse(responseText);
+      const newFiles = [
+        { name: 'index.html', language: 'html', content: appData.html || '' },
+        { name: 'style.css', language: 'css', content: appData.css || '' },
+        { name: 'script.js', language: 'javascript', content: appData.js || '' }
+      ];
+      setFiles(newFiles);
+      setActiveFileIndex(0);
+      alert('Application created successfully with AI!');
+    } catch (err: any) {
+      alert(`Failed to create app with AI: ${err.message}`);
+    } finally {
+      setIsAiLoading(false);
     }
   };
 
@@ -1594,6 +1651,13 @@ We welcome contributions! Please see our CONTRIBUTING.md for guidelines on how t
                     title="Create GitHub Repository"
                   >
                     <GithubIcon size={14} />
+                  </button>
+                  <button 
+                    onClick={createAppWithAi} 
+                    className="p-1 hover:bg-white/10 rounded text-white/50 hover:text-white"
+                    title="Create App with AI"
+                  >
+                    <Wand2 size={14} />
                   </button>
                   <button 
                     onClick={createRepo} 

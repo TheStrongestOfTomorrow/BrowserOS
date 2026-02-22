@@ -1,5 +1,5 @@
 {
-  "name": "browserOS",
-  "description": "A high-performance, web-based operating system featuring window management, VS Code integration, and classic gaming.",
+  "name": "browserOS V1.2.0",
+  "description": "A high-performance, web-based operating system featuring window management, VS Code integration, and classic gaming. Now with AI-powered app creation and enhanced Nexus IDE.",
   "requestFramePermissions": []
 }

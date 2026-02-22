@@ -158,7 +158,7 @@ export default function App() {
             className="flex items-center gap-2 font-bold tracking-tighter text-sm hover:bg-white/10 px-2 py-0.5 rounded transition-colors"
           >
             <Monitor size={14} />
-            <span>browserOS</span>
+            <span>browserOS V1.2.0</span>
           </button>
         </div>
 

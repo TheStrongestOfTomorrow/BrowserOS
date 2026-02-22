@@ -20,7 +20,26 @@ const INITIAL_FS: FileNode[] = [
             { name: 'todo.txt', type: 'file', content: '1. Build browserOS\n2. Conquer the web\n3. Profit' }
           ] },
           { name: 'Pictures', type: 'directory', children: [] },
-          { name: 'readme.md', type: 'file', content: '# Welcome to browserOS\nThis is a fully functional web-based OS.' },
+          { name: 'readme.md', type: 'file', content: `# Welcome to browserOS V1.2.0 🚀
+
+This is a fully functional web-based operating system built with React, Tailwind CSS, and Framer Motion.
+
+## 🌟 Features
+- **Nexus IDE Pro**: AI-powered development environment.
+- **Terminal**: Full-featured terminal with persistent filesystem.
+- **Apps**: A variety of built-in apps like Doom, Whiteboard, and more.
+- **Window Management**: Advanced windowing system with resizing and focus.
+
+## 📂 File System
+You are currently exploring the virtual file system. You can create files, directories, and even save your code repositories here.
+
+## 🚀 Getting Started
+1. Open **Nexus IDE** to start coding.
+2. Use the **Terminal** to manage your files.
+3. Check out the **App Store** for more tools.
+
+Enjoy your stay!
+` },
         ]
       }
     ]
