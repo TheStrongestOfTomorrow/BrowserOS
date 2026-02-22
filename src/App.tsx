@@ -3,11 +3,14 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Window } from './components/Window';
 import { Dock } from './components/Dock';
 import { ContextMenu } from './components/ContextMenu';
+import { LoginScreen } from './components/LoginScreen';
+import { useAuth } from './context/AuthContext';
 import { APPS } from './apps';
 import { WindowState, WindowId } from './types';
-import { Monitor, Battery, Wifi, Volume2, Search, Calendar, RefreshCw, Wallpaper, Info } from 'lucide-react';
+import { Monitor, Battery, Wifi, Volume2, Search, Calendar, RefreshCw, Wallpaper, Info, User as UserIcon, LogOut } from 'lucide-react';
 
 export default function App() {
+  const { user, profile, loading, signOut } = useAuth();
   const [windows, setWindows] = useState<WindowState[]>([]);
   const [focusedId, setFocusedId] = useState<WindowId | null>(null);
   const [time, setTime] = useState(new Date());
@@ -92,8 +95,16 @@ export default function App() {
     });
   };
 
+  const moveWindow = (id: string, x: number, y: number) => {
+    setWindows(prev => prev.map(w => w.id === id ? { ...w, x, y } : w));
+  };
+
   const resizeWindow = (id: string, width: number, height: number) => {
     setWindows(prev => prev.map(w => w.id === id ? { ...w, width, height } : w));
+  };
+
+  const updateWindow = (id: string, updates: Partial<WindowState>) => {
+    setWindows(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w));
   };
 
   const togglePin = (appId: string) => {
@@ -114,6 +125,21 @@ export default function App() {
       ]
     });
   };
+
+  if (loading) {
+    return (
+      <div className="w-screen h-screen bg-[#0f172a] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+          <span className="text-white/50 text-xs font-medium tracking-widest uppercase">Initializing browserOS...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginScreen />;
+  }
 
   return (
     <div 
@@ -137,6 +163,29 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 border-r border-white/10 pr-4">
+            <button 
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setContextMenu({
+                  x: rect.left,
+                  y: rect.bottom + 8,
+                  options: [
+                    { label: `Logged in as ${profile?.username || 'User'}`, icon: <UserIcon size={14} />, onClick: () => {} },
+                    { label: 'Sign Out', icon: <LogOut size={14} />, onClick: signOut },
+                  ]
+                });
+              }}
+              className="flex items-center gap-2 hover:bg-white/10 px-2 py-0.5 rounded transition-colors"
+            >
+              <img 
+                src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.id}`} 
+                alt="Avatar" 
+                className="w-4 h-4 rounded-full"
+              />
+              <span>{profile?.username || 'User'}</span>
+            </button>
+          </div>
           <div className="flex items-center gap-3 opacity-80">
             <Wifi size={14} />
             <Volume2 size={14} />
@@ -153,16 +202,18 @@ export default function App() {
       {/* Desktop Icons */}
       <div className="absolute inset-0 p-12 pt-20 grid grid-flow-col grid-rows-6 gap-4 w-fit">
         {APPS.slice(0, 4).map(app => (
-          <button 
+          <motion.button 
             key={app.id}
-            onDoubleClick={() => launchApp(app.id)}
-            className="flex flex-col items-center gap-1 w-20 p-2 rounded-lg hover:bg-white/10 group transition-all"
+            whileHover={{ scale: 1.05, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => launchApp(app.id)}
+            className="flex flex-col items-center gap-1 w-20 p-2 rounded-lg group transition-all"
           >
-            <div className="w-12 h-12 glass rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform">
+            <div className="w-12 h-12 glass rounded-xl flex items-center justify-center transition-transform">
               <app.icon className="w-6 h-6 text-white/80" />
             </div>
             <span className="text-[10px] text-white font-medium text-center drop-shadow-md">{app.name}</span>
-          </button>
+          </motion.button>
         ))}
       </div>
 
@@ -179,6 +230,8 @@ export default function App() {
                 onFocus={focusWindow}
                 onToggleMaximize={toggleMaximize}
                 onResize={resizeWindow}
+                onMove={moveWindow}
+                onUpdate={updateWindow}
               >
                 {win.content}
               </Window>
