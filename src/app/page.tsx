@@ -1,65 +1,151 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useOSStore } from "@/store";
+import { builtInApps } from "@/lib/apps";
+import StatusBar from "@/components/os/StatusBar";
+import Dock from "@/components/os/Dock";
+import Desktop from "@/components/os/Desktop";
+import WindowManager from "@/components/os/WindowManager";
+import Terminal from "@/components/apps/Terminal";
+import Files from "@/components/apps/Files";
+import Browser from "@/components/apps/Browser";
+import CodeEditor from "@/components/apps/CodeEditor";
+import Chat from "@/components/apps/Chat";
+import AppBuilder from "@/components/apps/AppBuilder";
+import Settings from "@/components/apps/Settings";
+import Notepad from "@/components/apps/Notepad";
+import Calculator from "@/components/apps/Calculator";
+import AppGallery from "@/components/apps/AppGallery";
+
+const APP_COMPONENTS: Record<string, React.ComponentType> = {
+  Terminal,
+  Files,
+  Browser,
+  CodeEditor,
+  Chat,
+  AppBuilder,
+  Settings,
+  Notepad,
+  Calculator,
+  AppGallery,
+  GalleryAppFrame: GalleryAppFrameComponent,
+};
+
+function GalleryAppFrameComponent() {
+  return (
+    <div className="h-full flex items-center justify-center bg-zinc-900 text-zinc-400 text-sm">
+      <div className="text-center">
+        <div className="text-3xl mb-2">📱</div>
+        <p>Installed Gallery App</p>
+        <p className="text-xs text-zinc-600 mt-1">Launch from the App Gallery</p>
+      </div>
+    </div>
+  );
+}
+
+function BootScreen() {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState("Initializing...");
+
+  useEffect(() => {
+    const steps = [
+      { at: 10, text: "Loading kernel..." },
+      { at: 25, text: "Mounting filesystem..." },
+      { at: 40, text: "Starting window manager..." },
+      { at: 55, text: "Loading applications..." },
+      { at: 70, text: "Configuring network..." },
+      { at: 85, text: "Starting desktop..." },
+      { at: 95, text: "Almost ready..." },
+    ];
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + Math.random() * 8 + 2;
+        if (next >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        const step = steps.find((s) => next >= s.at && prev < s.at);
+        if (step) setStatus(step.text);
+        return next;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="h-full w-full flex flex-col items-center justify-center bg-black">
+      <div className="text-6xl mb-6 animate-pulse">🖥️</div>
+      <h1 className="text-2xl font-bold text-white mb-2">BrowserOS</h1>
+      <p className="text-sm text-zinc-500 mb-8">Version 2.0</p>
+      <div className="w-64 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-blue-500 rounded-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+      <p className="text-xs text-zinc-600 mt-3">{status}</p>
+    </div>
+  );
+}
 
 export default function Home() {
+  const { apps, isBooting, setBooting, settings } = useOSStore();
+  const [ready, setReady] = useState(false);
+
+  // Initialize apps on mount
+  useEffect(() => {
+    const currentApps = useOSStore.getState().apps;
+    if (currentApps.length === 0) {
+      useOSStore.setState({ apps: [...builtInApps] });
+    }
+    setReady(true);
+  }, []);
+
+  // Boot sequence
+  useEffect(() => {
+    if (!ready) return;
+    const timer = setTimeout(() => {
+      setBooting(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [ready, setBooting]);
+
+  if (!ready || isBooting) {
+    return <BootScreen />;
+  }
+
+  const wallpaperGradients: Record<string, string> = {
+    gradient: "bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900",
+    ocean: "bg-gradient-to-br from-cyan-900 via-blue-900 to-slate-900",
+    sunset: "bg-gradient-to-br from-orange-900 via-red-900 to-purple-900",
+    forest: "bg-gradient-to-br from-green-900 via-emerald-900 to-slate-900",
+    midnight: "bg-gradient-to-br from-gray-900 via-slate-900 to-black",
+    aurora: "bg-gradient-to-br from-teal-900 via-purple-900 to-blue-900",
+  };
+
+  const wallpaperClass = wallpaperGradients[settings.wallpaper] || wallpaperGradients.gradient;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className={`h-screen w-screen flex flex-col overflow-hidden select-none ${wallpaperClass}`}>
+      <StatusBar />
+      <Desktop />
+      <WindowManager>
+        {(windowId, appId) => {
+          const AppComponent = APP_COMPONENTS[appId];
+          if (!AppComponent) {
+            return (
+              <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
+                App &quot;{appId}&quot; not found
+              </div>
+            );
+          }
+          return <AppComponent key={windowId} />;
+        }}
+      </WindowManager>
+      <Dock />
     </div>
   );
 }
