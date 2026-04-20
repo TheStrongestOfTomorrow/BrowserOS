@@ -5,9 +5,9 @@ import { useOSStore } from "@/store";
 export default function Desktop() {
   const { apps, openApp, contextMenu, setContextMenu } = useOSStore();
 
-  const desktopApps = apps.filter((app) =>
-    ["terminal", "files", "browser", "notepad", "calculator", "app-gallery"].includes(app.id)
-  );
+  // Show all apps on the desktop except maybe those that shouldn't be there
+  // but the user said "make all apps visible", so we'll show them all.
+  const desktopApps = apps;
 
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,15 +47,15 @@ export default function Desktop() {
       onClick={() => contextMenu && setContextMenu(null)}
     >
       {/* Desktop icons */}
-      <div className="p-4 grid grid-cols-1 gap-2 w-24">
+      <div className="p-4 grid grid-cols-1 grid-flow-col gap-4 w-fit h-fit max-h-full">
         {desktopApps.map((app) => (
           <button
             key={app.id}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-colors group"
+            className="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-white/10 transition-colors group w-20"
             onDoubleClick={() => openApp(app.id)}
           >
             <span className="text-3xl drop-shadow-lg">{app.icon}</span>
-            <span className="text-[10px] text-white text-center leading-tight drop-shadow-md group-hover:text-blue-300 transition-colors">
+            <span className="text-[10px] text-white text-center leading-tight drop-shadow-md group-hover:text-blue-300 transition-colors break-words w-full">
               {app.name}
             </span>
           </button>

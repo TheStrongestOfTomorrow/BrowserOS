@@ -1,0 +1,596 @@
+
+> browseros-v2@0.1.0 dev
+> next dev --webpack
+
+▲ Next.js 16.2.3 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+✓ Ready in 581ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+○ Compiling / ...
+ GET / 200 in 11.2s (next.js: 10.8s, application-code: 379ms)
+ GET / 200 in 65ms (next.js: 7ms, application-code: 57ms)
+ GET / 200 in 127ms (next.js: 6ms, application-code: 121ms)
+ GET / 200 in 66ms (next.js: 4ms, application-code: 62ms)
+ GET / 200 in 66ms (next.js: 3ms, application-code: 63ms)
+ GET / 200 in 73ms (next.js: 4ms, application-code: 69ms)
+ GET / 200 in 56ms (next.js: 4ms, application-code: 53ms)
+ GET / 200 in 61ms (next.js: 3ms, application-code: 59ms)
+ GET / 200 in 93ms (next.js: 6ms, application-code: 87ms)
+⨯ ./src/components/apps/AppBuilder.tsx
+Error:   x Unterminated template
+     ,-[/app/src/components/apps/AppBuilder.tsx:10:1]
+   7 |     export default function AppBuilder() {
+   8 |       const { installApp } = useOSStore();
+   9 |       const [appName, setAppName] = useState("My App");
+  10 | ,->   const [html, setHtml] = useState(\`<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;">
+  11 | |     <div style="text-align:center;">
+  12 | |       <h1 style="font-size:2.5rem;margin-bottom:0.5rem;">Hello, BrowserOS!</h1>
+  13 | |       <p style="font-size:1.2rem;opacity:0.8;">This is my first BrowserOS app</p>
+  14 | |       <button style="margin-top:1rem;padding:0.75rem 2rem;border:none;border-radius:8px;background:white;color:#667eea;font-size:1rem;cursor:pointer;" onclick="this.textContent='It works!'">Click Me</button>
+  15 | |     </div>
+  16 | |   </div>\`);
+  17 | |     const [css, setCss] = useState("");
+  18 | |     const [js, setJs] = useState("");
+  19 | |     const [activeTab, setActiveTab] = useState<"html" | "css" | "js" | "preview">("html");
+  20 | |     const [previewKey, setPreviewKey] = useState(1);
+  21 | |
+  22 | |     const getPreviewDoc = useCallback(() => {
+  23 | |       return \`<!DOCTYPE html>
+  24 | |   <html>
+  25 | |   <head><style>\${css}</style></head>
+  26 | |   <body>\${html}<script>\${js}</script></body>
+  27 | |   </html>\`;
+  28 | |     }, [html, css, js]);
+  29 | |
+  30 | |     const handleInstall = useCallback(() => {
+  31 | |       const id = appName.toLowerCase().replace(/\\s+/g, "-") + "-" + Date.now();
+  32 | |       installApp({
+  33 | |         id,
+  34 | |         name: appName,
+  35 | |         description: "Custom app created with App Builder",
+  36 | |         author: "You",
+  37 | |         version: "1.0.0",
+  38 | |         icon: "🚀",
+  39 | |         category: "custom",
+  40 | |         url: "",
+  41 | |         screenshots: [],
+  42 | |         rating: 5,
+  43 | |         downloads: 0,
+  44 | |         html: getPreviewDoc(),
+  45 | |       });
+  46 | |       alert(\`"\${appName}" has been installed! Find it in your apps.\`);
+  47 | |     }, [appName, getPreviewDoc, installApp]);
+  48 | |
+  49 | |     const handleExport = useCallback(() => {
+  50 | |       const appData = {
+  51 | |         name: appName,
+  52 | |         html,
+  53 | |         css,
+  54 | |         js
+  55 | |       };
+  56 | |       const blob = new Blob([JSON.stringify(appData, null, 2)], { type: "application/json" });
+  57 | |       const url = URL.createObjectURL(blob);
+  58 | |       const a = document.createElement("a");
+  59 | |       a.href = url;
+  60 | |       a.download = \`\${appName.toLowerCase().replace(/\\s+/g, "-")}.json\`;
+  61 | |       a.click();
+  62 | |       URL.revokeObjectURL(url);
+  63 | |     }, [appName, html, css, js]);
+  64 | |
+  65 | |     const handleImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  66 | |       const file = e.target.files?.[0];
+  67 | |       if (!file) return;
+  68 | |       const reader = new FileReader();
+  69 | |       reader.onload = (event) => {
+  70 | |         try {
+  71 | |           const appData = JSON.parse(event.target?.result as string);
+  72 | |           if (appData.name) setAppName(appData.name);
+  73 | |           if (appData.html) setHtml(appData.html);
+  74 | |           if (appData.css) setCss(appData.css);
+  75 | |           if (appData.js) setJs(appData.js);
+  76 | |           setActiveTab("html");
+  77 | |         } catch (err) {
+  78 | |           alert("Failed to parse app file.");
+  79 | |         }
+  80 | |       };
+  81 | |       reader.readAsText(file);
+  82 | |       // Reset input
+  83 | |       e.target.value = "";
+  84 | |     }, []);
+  85 | |
+  86 | |     return (
+  87 | |       <div className="h-full flex flex-col bg-zinc-900">
+  88 | |         {/* Toolbar */}
+  89 | |         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 border-b border-white/5">
+  90 | |           <input
+  91 | |             type="text"
+  92 | |             value={appName}
+  93 | |             onChange={(e) => setAppName(e.target.value)}
+  94 | |             className="bg-zinc-700/50 rounded px-2 py-1 text-sm text-zinc-200 outline-none w-48"
+  95 | |             placeholder="App name..."
+  96 | |           />
+  97 | |           <div className="flex-1" />
+  98 | |           <button
+  99 | |             onClick={handleExport}
+ 100 | |             className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors"
+ 101 | |             title="Export as JSON"
+ 102 | |           >
+ 103 | |             <Download size={14} />
+ 104 | |           </button>
+ 105 | |           <label className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors cursor-pointer" title="Import from JSON">
+ 106 | |             <Upload size={14} />
+ 107 | |             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+ 108 | |           </label>
+ 109 | |           <div className="w-px h-4 bg-white/10 mx-1" />
+ 110 | |           <button
+ 111 | |             onClick={() => { setPreviewKey((k) => k + 1); setActiveTab("preview"); }}
+ 112 | |             className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-500 rounded transition-colors"
+ 113 | |           >
+ 114 | |             <Play size={12} /> Preview
+ 115 | |           </button>
+ 116 | |           <button
+ 117 | |             onClick={handleInstall}
+ 118 | |             className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 rounded transition-colors"
+ 119 | |           >
+ 120 | |             <Save size={12} /> Install App
+ 121 | |           </button>
+ 122 | |         </div>
+ 123 | |
+ 124 | |         {/* Editor tabs */}
+ 125 | |         <div className="flex items-center bg-zinc-800/50 border-b border-white/5">
+ 126 | |           {(["html", "css", "js", "preview"] as const).map((tab) => (
+ 127 | |             <button
+ 128 | |               key={tab}
+ 129 | |               onClick={() => setActiveTab(tab)}
+ 130 | |               className={\`px-4 py-2 text-xs font-medium transition-colors \${
+ 131 | |                 activeTab === tab
+ 132 | |                   ? "text-blue-400 border-b-2 border-blue-400 bg-zinc-800/50"
+ 133 | |                   : "text-zinc-500 hover:text-zinc-300"
+ 134 | |               }\`}
+ 135 | |             >
+ 136 | |               {tab === "preview" ? <Eye size={12} className="inline mr-1" /> : <Code size={12} className="inline mr-1" />}
+ 137 | |               {tab.toUpperCase()}
+ 138 | |             </button>
+ 139 | |           ))}
+ 140 | |         </div>
+ 141 | |
+ 142 | |         {/* Content */}
+ 143 | |         <div className="flex-1 overflow-hidden">
+ 144 | |           {activeTab === "preview" ? (
+ 145 | |             <iframe
+ 146 | |               key={previewKey}
+ 147 | |               srcDoc={getPreviewDoc()}
+ 148 | |               className="w-full h-full border-0 bg-white"
+ 149 | |               sandbox="allow-scripts"
+ 150 | |               title="Preview"
+ 151 | |             />
+ 152 | |           ) : (
+ 153 | |             <textarea
+ 154 | |               value={activeTab === "html" ? html : activeTab === "css" ? css : js}
+ 155 | |               onChange={(e) => {
+ 156 | |                 if (activeTab === "html") setHtml(e.target.value);
+ 157 | |                 else if (activeTab === "css") setCss(e.target.value);
+ 158 | |                 else setJs(e.target.value);
+ 159 | |               }}
+ 160 | |               className="w-full h-full bg-zinc-950 text-zinc-200 p-3 font-mono text-xs resize-none outline-none"
+ 161 | |               spellCheck={false}
+ 162 | |               placeholder={activeTab === "html" ? "Write HTML here..." : activeTab === "css" ? "Write CSS here..." : "Write JavaScript here..."}
+ 163 | |             />
+ 164 | |           )}
+ 165 | |         </div>
+ 166 | |       </div>
+ 167 | |     );
+ 168 | `-> }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/apps/AppBuilder.tsx
+./src/app/page.tsx
+⨯ ./src/components/apps/AppBuilder.tsx
+Error:   x Unterminated template
+     ,-[/app/src/components/apps/AppBuilder.tsx:10:1]
+   7 |     export default function AppBuilder() {
+   8 |       const { installApp } = useOSStore();
+   9 |       const [appName, setAppName] = useState("My App");
+  10 | ,->   const [html, setHtml] = useState(\`<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;">
+  11 | |     <div style="text-align:center;">
+  12 | |       <h1 style="font-size:2.5rem;margin-bottom:0.5rem;">Hello, BrowserOS!</h1>
+  13 | |       <p style="font-size:1.2rem;opacity:0.8;">This is my first BrowserOS app</p>
+  14 | |       <button style="margin-top:1rem;padding:0.75rem 2rem;border:none;border-radius:8px;background:white;color:#667eea;font-size:1rem;cursor:pointer;" onclick="this.textContent='It works!'">Click Me</button>
+  15 | |     </div>
+  16 | |   </div>\`);
+  17 | |     const [css, setCss] = useState("");
+  18 | |     const [js, setJs] = useState("");
+  19 | |     const [activeTab, setActiveTab] = useState<"html" | "css" | "js" | "preview">("html");
+  20 | |     const [previewKey, setPreviewKey] = useState(1);
+  21 | |
+  22 | |     const getPreviewDoc = useCallback(() => {
+  23 | |       return \`<!DOCTYPE html>
+  24 | |   <html>
+  25 | |   <head><style>\${css}</style></head>
+  26 | |   <body>\${html}<script>\${js}</script></body>
+  27 | |   </html>\`;
+  28 | |     }, [html, css, js]);
+  29 | |
+  30 | |     const handleInstall = useCallback(() => {
+  31 | |       const id = appName.toLowerCase().replace(/\\s+/g, "-") + "-" + Date.now();
+  32 | |       installApp({
+  33 | |         id,
+  34 | |         name: appName,
+  35 | |         description: "Custom app created with App Builder",
+  36 | |         author: "You",
+  37 | |         version: "1.0.0",
+  38 | |         icon: "🚀",
+  39 | |         category: "custom",
+  40 | |         url: "",
+  41 | |         screenshots: [],
+  42 | |         rating: 5,
+  43 | |         downloads: 0,
+  44 | |         html: getPreviewDoc(),
+  45 | |       });
+  46 | |       alert(\`"\${appName}" has been installed! Find it in your apps.\`);
+  47 | |     }, [appName, getPreviewDoc, installApp]);
+  48 | |
+  49 | |     const handleExport = useCallback(() => {
+  50 | |       const appData = {
+  51 | |         name: appName,
+  52 | |         html,
+  53 | |         css,
+  54 | |         js
+  55 | |       };
+  56 | |       const blob = new Blob([JSON.stringify(appData, null, 2)], { type: "application/json" });
+  57 | |       const url = URL.createObjectURL(blob);
+  58 | |       const a = document.createElement("a");
+  59 | |       a.href = url;
+  60 | |       a.download = \`\${appName.toLowerCase().replace(/\\s+/g, "-")}.json\`;
+  61 | |       a.click();
+  62 | |       URL.revokeObjectURL(url);
+  63 | |     }, [appName, html, css, js]);
+  64 | |
+  65 | |     const handleImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  66 | |       const file = e.target.files?.[0];
+  67 | |       if (!file) return;
+  68 | |       const reader = new FileReader();
+  69 | |       reader.onload = (event) => {
+  70 | |         try {
+  71 | |           const appData = JSON.parse(event.target?.result as string);
+  72 | |           if (appData.name) setAppName(appData.name);
+  73 | |           if (appData.html) setHtml(appData.html);
+  74 | |           if (appData.css) setCss(appData.css);
+  75 | |           if (appData.js) setJs(appData.js);
+  76 | |           setActiveTab("html");
+  77 | |         } catch (err) {
+  78 | |           alert("Failed to parse app file.");
+  79 | |         }
+  80 | |       };
+  81 | |       reader.readAsText(file);
+  82 | |       // Reset input
+  83 | |       e.target.value = "";
+  84 | |     }, []);
+  85 | |
+  86 | |     return (
+  87 | |       <div className="h-full flex flex-col bg-zinc-900">
+  88 | |         {/* Toolbar */}
+  89 | |         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 border-b border-white/5">
+  90 | |           <input
+  91 | |             type="text"
+  92 | |             value={appName}
+  93 | |             onChange={(e) => setAppName(e.target.value)}
+  94 | |             className="bg-zinc-700/50 rounded px-2 py-1 text-sm text-zinc-200 outline-none w-48"
+  95 | |             placeholder="App name..."
+  96 | |           />
+  97 | |           <div className="flex-1" />
+  98 | |           <button
+  99 | |             onClick={handleExport}
+ 100 | |             className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors"
+ 101 | |             title="Export as JSON"
+ 102 | |           >
+ 103 | |             <Download size={14} />
+ 104 | |           </button>
+ 105 | |           <label className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors cursor-pointer" title="Import from JSON">
+ 106 | |             <Upload size={14} />
+ 107 | |             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+ 108 | |           </label>
+ 109 | |           <div className="w-px h-4 bg-white/10 mx-1" />
+ 110 | |           <button
+ 111 | |             onClick={() => { setPreviewKey((k) => k + 1); setActiveTab("preview"); }}
+ 112 | |             className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-500 rounded transition-colors"
+ 113 | |           >
+ 114 | |             <Play size={12} /> Preview
+ 115 | |           </button>
+ 116 | |           <button
+ 117 | |             onClick={handleInstall}
+ 118 | |             className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 rounded transition-colors"
+ 119 | |           >
+ 120 | |             <Save size={12} /> Install App
+ 121 | |           </button>
+ 122 | |         </div>
+ 123 | |
+ 124 | |         {/* Editor tabs */}
+ 125 | |         <div className="flex items-center bg-zinc-800/50 border-b border-white/5">
+ 126 | |           {(["html", "css", "js", "preview"] as const).map((tab) => (
+ 127 | |             <button
+ 128 | |               key={tab}
+ 129 | |               onClick={() => setActiveTab(tab)}
+ 130 | |               className={\`px-4 py-2 text-xs font-medium transition-colors \${
+ 131 | |                 activeTab === tab
+ 132 | |                   ? "text-blue-400 border-b-2 border-blue-400 bg-zinc-800/50"
+ 133 | |                   : "text-zinc-500 hover:text-zinc-300"
+ 134 | |               }\`}
+ 135 | |             >
+ 136 | |               {tab === "preview" ? <Eye size={12} className="inline mr-1" /> : <Code size={12} className="inline mr-1" />}
+ 137 | |               {tab.toUpperCase()}
+ 138 | |             </button>
+ 139 | |           ))}
+ 140 | |         </div>
+ 141 | |
+ 142 | |         {/* Content */}
+ 143 | |         <div className="flex-1 overflow-hidden">
+ 144 | |           {activeTab === "preview" ? (
+ 145 | |             <iframe
+ 146 | |               key={previewKey}
+ 147 | |               srcDoc={getPreviewDoc()}
+ 148 | |               className="w-full h-full border-0 bg-white"
+ 149 | |               sandbox="allow-scripts"
+ 150 | |               title="Preview"
+ 151 | |             />
+ 152 | |           ) : (
+ 153 | |             <textarea
+ 154 | |               value={activeTab === "html" ? html : activeTab === "css" ? css : js}
+ 155 | |               onChange={(e) => {
+ 156 | |                 if (activeTab === "html") setHtml(e.target.value);
+ 157 | |                 else if (activeTab === "css") setCss(e.target.value);
+ 158 | |                 else setJs(e.target.value);
+ 159 | |               }}
+ 160 | |               className="w-full h-full bg-zinc-950 text-zinc-200 p-3 font-mono text-xs resize-none outline-none"
+ 161 | |               spellCheck={false}
+ 162 | |               placeholder={activeTab === "html" ? "Write HTML here..." : activeTab === "css" ? "Write CSS here..." : "Write JavaScript here..."}
+ 163 | |             />
+ 164 | |           )}
+ 165 | |         </div>
+ 166 | |       </div>
+ 167 | |     );
+ 168 | `-> }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/apps/AppBuilder.tsx
+./src/app/page.tsx
+⨯ ./src/components/apps/AppBuilder.tsx
+Error:   x Unterminated template
+     ,-[/app/src/components/apps/AppBuilder.tsx:10:1]
+   7 |     export default function AppBuilder() {
+   8 |       const { installApp } = useOSStore();
+   9 |       const [appName, setAppName] = useState("My App");
+  10 | ,->   const [html, setHtml] = useState(\`<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;">
+  11 | |     <div style="text-align:center;">
+  12 | |       <h1 style="font-size:2.5rem;margin-bottom:0.5rem;">Hello, BrowserOS!</h1>
+  13 | |       <p style="font-size:1.2rem;opacity:0.8;">This is my first BrowserOS app</p>
+  14 | |       <button style="margin-top:1rem;padding:0.75rem 2rem;border:none;border-radius:8px;background:white;color:#667eea;font-size:1rem;cursor:pointer;" onclick="this.textContent='It works!'">Click Me</button>
+  15 | |     </div>
+  16 | |   </div>\`);
+  17 | |     const [css, setCss] = useState("");
+  18 | |     const [js, setJs] = useState("");
+  19 | |     const [activeTab, setActiveTab] = useState<"html" | "css" | "js" | "preview">("html");
+  20 | |     const [previewKey, setPreviewKey] = useState(1);
+  21 | |
+  22 | |     const getPreviewDoc = useCallback(() => {
+  23 | |       return \`<!DOCTYPE html>
+  24 | |   <html>
+  25 | |   <head><style>\${css}</style></head>
+  26 | |   <body>\${html}<script>\${js}</script></body>
+  27 | |   </html>\`;
+  28 | |     }, [html, css, js]);
+  29 | |
+  30 | |     const handleInstall = useCallback(() => {
+  31 | |       const id = appName.toLowerCase().replace(/\\s+/g, "-") + "-" + Date.now();
+  32 | |       installApp({
+  33 | |         id,
+  34 | |         name: appName,
+  35 | |         description: "Custom app created with App Builder",
+  36 | |         author: "You",
+  37 | |         version: "1.0.0",
+  38 | |         icon: "🚀",
+  39 | |         category: "custom",
+  40 | |         url: "",
+  41 | |         screenshots: [],
+  42 | |         rating: 5,
+  43 | |         downloads: 0,
+  44 | |         html: getPreviewDoc(),
+  45 | |       });
+  46 | |       alert(\`"\${appName}" has been installed! Find it in your apps.\`);
+  47 | |     }, [appName, getPreviewDoc, installApp]);
+  48 | |
+  49 | |     const handleExport = useCallback(() => {
+  50 | |       const appData = {
+  51 | |         name: appName,
+  52 | |         html,
+  53 | |         css,
+  54 | |         js
+  55 | |       };
+  56 | |       const blob = new Blob([JSON.stringify(appData, null, 2)], { type: "application/json" });
+  57 | |       const url = URL.createObjectURL(blob);
+  58 | |       const a = document.createElement("a");
+  59 | |       a.href = url;
+  60 | |       a.download = \`\${appName.toLowerCase().replace(/\\s+/g, "-")}.json\`;
+  61 | |       a.click();
+  62 | |       URL.revokeObjectURL(url);
+  63 | |     }, [appName, html, css, js]);
+  64 | |
+  65 | |     const handleImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  66 | |       const file = e.target.files?.[0];
+  67 | |       if (!file) return;
+  68 | |       const reader = new FileReader();
+  69 | |       reader.onload = (event) => {
+  70 | |         try {
+  71 | |           const appData = JSON.parse(event.target?.result as string);
+  72 | |           if (appData.name) setAppName(appData.name);
+  73 | |           if (appData.html) setHtml(appData.html);
+  74 | |           if (appData.css) setCss(appData.css);
+  75 | |           if (appData.js) setJs(appData.js);
+  76 | |           setActiveTab("html");
+  77 | |         } catch (err) {
+  78 | |           alert("Failed to parse app file.");
+  79 | |         }
+  80 | |       };
+  81 | |       reader.readAsText(file);
+  82 | |       // Reset input
+  83 | |       e.target.value = "";
+  84 | |     }, []);
+  85 | |
+  86 | |     return (
+  87 | |       <div className="h-full flex flex-col bg-zinc-900">
+  88 | |         {/* Toolbar */}
+  89 | |         <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800 border-b border-white/5">
+  90 | |           <input
+  91 | |             type="text"
+  92 | |             value={appName}
+  93 | |             onChange={(e) => setAppName(e.target.value)}
+  94 | |             className="bg-zinc-700/50 rounded px-2 py-1 text-sm text-zinc-200 outline-none w-48"
+  95 | |             placeholder="App name..."
+  96 | |           />
+  97 | |           <div className="flex-1" />
+  98 | |           <button
+  99 | |             onClick={handleExport}
+ 100 | |             className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors"
+ 101 | |             title="Export as JSON"
+ 102 | |           >
+ 103 | |             <Download size={14} />
+ 104 | |           </button>
+ 105 | |           <label className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors cursor-pointer" title="Import from JSON">
+ 106 | |             <Upload size={14} />
+ 107 | |             <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+ 108 | |           </label>
+ 109 | |           <div className="w-px h-4 bg-white/10 mx-1" />
+ 110 | |           <button
+ 111 | |             onClick={() => { setPreviewKey((k) => k + 1); setActiveTab("preview"); }}
+ 112 | |             className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-500 rounded transition-colors"
+ 113 | |           >
+ 114 | |             <Play size={12} /> Preview
+ 115 | |           </button>
+ 116 | |           <button
+ 117 | |             onClick={handleInstall}
+ 118 | |             className="flex items-center gap-1 px-3 py-1 text-xs bg-blue-600 hover:bg-blue-500 rounded transition-colors"
+ 119 | |           >
+ 120 | |             <Save size={12} /> Install App
+ 121 | |           </button>
+ 122 | |         </div>
+ 123 | |
+ 124 | |         {/* Editor tabs */}
+ 125 | |         <div className="flex items-center bg-zinc-800/50 border-b border-white/5">
+ 126 | |           {(["html", "css", "js", "preview"] as const).map((tab) => (
+ 127 | |             <button
+ 128 | |               key={tab}
+ 129 | |               onClick={() => setActiveTab(tab)}
+ 130 | |               className={\`px-4 py-2 text-xs font-medium transition-colors \${
+ 131 | |                 activeTab === tab
+ 132 | |                   ? "text-blue-400 border-b-2 border-blue-400 bg-zinc-800/50"
+ 133 | |                   : "text-zinc-500 hover:text-zinc-300"
+ 134 | |               }\`}
+ 135 | |             >
+ 136 | |               {tab === "preview" ? <Eye size={12} className="inline mr-1" /> : <Code size={12} className="inline mr-1" />}
+ 137 | |               {tab.toUpperCase()}
+ 138 | |             </button>
+ 139 | |           ))}
+ 140 | |         </div>
+ 141 | |
+ 142 | |         {/* Content */}
+ 143 | |         <div className="flex-1 overflow-hidden">
+ 144 | |           {activeTab === "preview" ? (
+ 145 | |             <iframe
+ 146 | |               key={previewKey}
+ 147 | |               srcDoc={getPreviewDoc()}
+ 148 | |               className="w-full h-full border-0 bg-white"
+ 149 | |               sandbox="allow-scripts"
+ 150 | |               title="Preview"
+ 151 | |             />
+ 152 | |           ) : (
+ 153 | |             <textarea
+ 154 | |               value={activeTab === "html" ? html : activeTab === "css" ? css : js}
+ 155 | |               onChange={(e) => {
+ 156 | |                 if (activeTab === "html") setHtml(e.target.value);
+ 157 | |                 else if (activeTab === "css") setCss(e.target.value);
+ 158 | |                 else setJs(e.target.value);
+ 159 | |               }}
+ 160 | |               className="w-full h-full bg-zinc-950 text-zinc-200 p-3 font-mono text-xs resize-none outline-none"
+ 161 | |               spellCheck={false}
+ 162 | |               placeholder={activeTab === "html" ? "Write HTML here..." : activeTab === "css" ? "Write CSS here..." : "Write JavaScript here..."}
+ 163 | |             />
+ 164 | |           )}
+ 165 | |         </div>
+ 166 | |       </div>
+ 167 | |     );
+ 168 | `-> }
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/apps/AppBuilder.tsx
+./src/app/page.tsx
+ GET / 200 in 376ms (next.js: 149ms, application-code: 227ms)
+ GET / 200 in 63ms (next.js: 4ms, application-code: 59ms)
+ GET / 200 in 64ms (next.js: 3ms, application-code: 61ms)
+ GET / 200 in 59ms (next.js: 2ms, application-code: 57ms)
+ GET / 200 in 58ms (next.js: 3ms, application-code: 55ms)
+ GET / 200 in 51ms (next.js: 2ms, application-code: 49ms)
+ GET / 200 in 57ms (next.js: 3ms, application-code: 54ms)
+ GET / 200 in 55ms (next.js: 2ms, application-code: 53ms)
+ GET / 200 in 59ms (next.js: 3ms, application-code: 56ms)
+ GET / 200 in 66ms (next.js: 3ms, application-code: 63ms)
+⨯ ./src/lib/storage.ts:5:1
+Module not found: Can't resolve 'idb'
+  3 |  * Handles virtual filesystem and persistent state
+  4 |  */
+> 5 | import { openDB } from "idb";
+    | ^
+  6 | import type { FileSystemNode } from "@/types";
+  7 |
+  8 | const DB_NAME = "BrowserOS";
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/page.tsx
+⨯ ./src/lib/storage.ts:5:1
+Module not found: Can't resolve 'idb'
+  3 |  * Handles virtual filesystem and persistent state
+  4 |  */
+> 5 | import { openDB } from "idb";
+    | ^
+  6 | import type { FileSystemNode } from "@/types";
+  7 |
+  8 | const DB_NAME = "BrowserOS";
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/page.tsx
+⨯ ./src/lib/storage.ts:5:1
+Module not found: Can't resolve 'idb'
+  3 |  * Handles virtual filesystem and persistent state
+  4 |  */
+> 5 | import { openDB } from "idb";
+    | ^
+  6 | import type { FileSystemNode } from "@/types";
+  7 |
+  8 | const DB_NAME = "BrowserOS";
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/store/index.ts
+./src/app/page.tsx

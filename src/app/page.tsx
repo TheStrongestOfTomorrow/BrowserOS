@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useOSStore } from "@/store";
 import { builtInApps } from "@/lib/apps";
+import { getItem } from "@/lib/storage";
+import type { AppDefinition, GalleryApp, FileSystemNode, SystemSettings } from "@/types";
 import StatusBar from "@/components/os/StatusBar";
 import Dock from "@/components/os/Dock";
 import Desktop from "@/components/os/Desktop";
@@ -18,7 +20,7 @@ import Notepad from "@/components/apps/Notepad";
 import Calculator from "@/components/apps/Calculator";
 import AppGallery from "@/components/apps/AppGallery";
 
-const APP_COMPONENTS: Record<string, React.ComponentType> = {
+const APP_COMPONENTS: Record<string, React.ComponentType<{ appId?: string }>> = {
   Terminal,
   Files,
   Browser,
@@ -32,14 +34,47 @@ const APP_COMPONENTS: Record<string, React.ComponentType> = {
   GalleryAppFrame: GalleryAppFrameComponent,
 };
 
-function GalleryAppFrameComponent() {
-  return (
-    <div className="h-full flex items-center justify-center bg-zinc-900 text-zinc-400 text-sm">
-      <div className="text-center">
-        <div className="text-3xl mb-2">📱</div>
-        <p>Installed Gallery App</p>
-        <p className="text-xs text-zinc-600 mt-1">Launch from the App Gallery</p>
+function GalleryAppFrameComponent({ appId }: { appId?: string }) {
+  const { galleryApps, apps } = useOSStore();
+  const appDef = apps.find(a => a.id === appId);
+  const galleryApp = galleryApps.find(a => a.id === appId);
+
+  const html = galleryApp?.html;
+  const url = galleryApp?.url;
+
+  if (!galleryApp && !appDef) {
+    return (
+      <div className="h-full flex items-center justify-center bg-zinc-900 text-zinc-400 text-sm">
+        App definition not found
       </div>
+    );
+  }
+
+  return (
+    <div className="h-full w-full bg-white overflow-hidden">
+      {html ? (
+        <iframe
+          srcDoc={html}
+          className="w-full h-full border-0"
+          sandbox="allow-scripts allow-forms allow-popups allow-modals"
+          title={galleryApp?.name || "App"}
+        />
+      ) : url ? (
+        <iframe
+          src={url}
+          className="w-full h-full border-0"
+          sandbox="allow-scripts allow-forms allow-popups allow-modals allow-same-origin"
+          title={galleryApp?.name || "App"}
+        />
+      ) : (
+        <div className="h-full flex items-center justify-center bg-zinc-900 text-zinc-400 text-sm p-8 text-center">
+          <div>
+            <div className="text-3xl mb-2">📱</div>
+            <p>{galleryApp?.name || appDef?.name}</p>
+            <p className="text-xs text-zinc-600 mt-2">This app has no content to display.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -92,16 +127,50 @@ function BootScreen() {
 }
 
 export default function Home() {
-  const { apps, isBooting, setBooting, settings } = useOSStore();
+  const { isBooting, setBooting, settings } = useOSStore();
   const [ready, setReady] = useState(false);
 
   // Initialize apps on mount
   useEffect(() => {
-    const currentApps = useOSStore.getState().apps;
-    if (currentApps.length === 0) {
-      useOSStore.setState({ apps: [...builtInApps] });
-    }
-    setReady(true);
+    const init = async () => {
+      const [installedAppIds, galleryApps, fileSystem, savedSettings] = await Promise.all([
+        getItem<string[]>("installedAppIds"),
+        getItem<GalleryApp[]>("galleryApps"),
+        getItem<FileSystemNode>("fileSystem"),
+        getItem<SystemSettings>("settings"),
+      ]);
+
+      const ids = installedAppIds || [];
+      const gApps = galleryApps || [];
+
+      const installedApps: AppDefinition[] = ids.map(id => {
+        const galleryApp = gApps.find(a => a.id === id);
+        return {
+          id: id,
+          name: galleryApp?.name || "Unknown App",
+          icon: galleryApp?.icon || "📦",
+          description: galleryApp?.description || "",
+          category: "utility",
+          component: "GalleryAppFrame",
+          defaultWidth: 800,
+          defaultHeight: 600,
+          minWidth: 400,
+          minHeight: 300,
+          isBuiltIn: false,
+        };
+      });
+
+      const updates: Record<string, unknown> = { apps: [...builtInApps, ...installedApps] };
+      if (installedAppIds) updates.installedAppIds = ids;
+      if (galleryApps) updates.galleryApps = gApps;
+      if (fileSystem) updates.fileSystem = fileSystem;
+      if (savedSettings) updates.settings = savedSettings;
+
+      useOSStore.setState(updates);
+      setReady(true);
+    };
+
+    init();
   }, []);
 
   // Boot sequence
@@ -134,15 +203,18 @@ export default function Home() {
       <Desktop />
       <WindowManager>
         {(windowId, appId) => {
-          const AppComponent = APP_COMPONENTS[appId];
+          const app = useOSStore.getState().apps.find(a => a.id === appId);
+          const componentKey = app?.component || appId;
+          const AppComponent = APP_COMPONENTS[componentKey];
+
           if (!AppComponent) {
             return (
               <div className="h-full flex items-center justify-center text-zinc-500 text-sm">
-                App &quot;{appId}&quot; not found
+                App &quot;{appId}&quot; (component: {componentKey}) not found
               </div>
             );
           }
-          return <AppComponent key={windowId} />;
+          return <AppComponent key={windowId} appId={appId} />;
         }}
       </WindowManager>
       <Dock />

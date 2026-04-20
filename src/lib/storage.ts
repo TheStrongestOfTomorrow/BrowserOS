@@ -1,72 +1,77 @@
+/**
+ * BrowserOS Storage Utilities
+ * Handles virtual filesystem and persistent state
+ */
+import { openDB } from "idb";
 import type { FileSystemNode } from "@/types";
-import { getNodeByPath } from "./filesystem";
 
-const STORAGE_KEY = "browseros-filesystem";
+const DB_NAME = "BrowserOS";
+const STORE_NAME = "kv";
 
-export function saveFileSystem(fs: FileSystemNode): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(fs));
-  } catch {
-    // Storage full or unavailable
-  }
+const dbPromise = typeof window !== "undefined"
+  ? openDB(DB_NAME, 1, {
+      upgrade(db) {
+        db.createObjectStore(STORE_NAME);
+      },
+    })
+  : null;
+
+export const kv = {
+  async get<T>(key: string): Promise<T | undefined> {
+    if (!dbPromise) return undefined;
+    const db = await dbPromise;
+    return db.get(STORE_NAME, key);
+  },
+  async set<T>(key: string, value: T): Promise<void> {
+    if (!dbPromise) return;
+    const db = await dbPromise;
+    await db.put(STORE_NAME, value, key);
+  },
+  async delete(key: string): Promise<void> {
+    if (!dbPromise) return;
+    const db = await dbPromise;
+    await db.delete(STORE_NAME, key);
+  },
+};
+
+export async function getItem<T>(key: string): Promise<T | undefined> {
+  return kv.get<T>(key);
 }
 
-export function loadFileSystem(): FileSystemNode | null {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : null;
-  } catch {
-    return null;
-  }
+export async function setItem<T>(key: string, value: T): Promise<void> {
+  return kv.set<T>(key, value);
 }
 
-export async function readOPFSFile(path: string): Promise<string | null> {
-  try {
-    const root = await navigator.storage.getDirectory();
-    const parts = path.split("/").filter(Boolean);
-    let dir = root;
-    for (let i = 0; i < parts.length - 1; i++) {
-      dir = await dir.getDirectoryHandle(parts[i]);
-    }
-    const fileHandle = await dir.getFileHandle(parts[parts.length - 1]);
-    const file = await fileHandle.getFile();
-    return await file.text();
-  } catch {
-    return null;
-  }
-}
+export function resolvePath(cwd: string, path: string): string {
+  if (path.startsWith("/")) return path;
+  if (path === "~") return "/home/user";
 
-export async function writeOPFSFile(path: string, content: string): Promise<void> {
-  try {
-    const root = await navigator.storage.getDirectory();
-    const parts = path.split("/").filter(Boolean);
-    let dir = root;
-    for (let i = 0; i < parts.length - 1; i++) {
-      dir = await dir.getDirectoryHandle(parts[i], { create: true });
-    }
-    const fileHandle = await dir.getFileHandle(parts[parts.length - 1], { create: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(content);
-    await writable.close();
-  } catch {
-    // OPFS not available
-  }
-}
+  const parts = cwd.split("/").filter(Boolean);
+  const pathParts = path.split("/").filter(Boolean);
 
-export function resolvePath(currentPath: string, relativePath: string): string {
-  if (relativePath.startsWith("/")) return relativePath;
-  const parts = currentPath.split("/").filter(Boolean);
-  const relParts = relativePath.split("/").filter(Boolean);
-  for (const part of relParts) {
+  for (const part of pathParts) {
     if (part === "..") {
       parts.pop();
     } else if (part !== ".") {
       parts.push(part);
     }
   }
+
   return "/" + parts.join("/");
 }
 
-export function getPathNode(fs: FileSystemNode, path: string): FileSystemNode | null {
-  return getNodeByPath(fs, path);
+export function getPathNode(root: FileSystemNode, path: string): FileSystemNode | null {
+  if (path === "/") return root;
+
+  const parts = path.split("/").filter(Boolean);
+  let current: FileSystemNode = root;
+
+  for (const part of parts) {
+    if (!current.children || !current.children[part]) {
+      return null;
+    }
+    current = current.children[part];
+  }
+
+  return current;
 }
