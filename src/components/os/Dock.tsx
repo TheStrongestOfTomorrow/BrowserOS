@@ -4,10 +4,11 @@ import { useOSStore } from "@/store";
 import { builtInApps } from "@/lib/apps";
 
 export default function Dock() {
-  const { windows, openApp, focusWindow, minimizeWindow, settings } = useOSStore();
+  const { windows, openApp, focusWindow, minimizeWindow, settings, apps } = useOSStore();
 
-  const dockApps = builtInApps.filter((app) =>
-    ["terminal", "files", "browser", "code-editor", "chat", "settings", "app-gallery"].includes(app.id)
+  // Filter dock apps: built-in ones + any app currently running
+  const dockApps = apps.filter((app) =>
+    app.isBuiltIn || windows.some(w => w.appId === app.id)
   );
 
   const dockScale = settings.dockSize === "small" ? 0.8 : settings.dockSize === "large" ? 1.2 : 1;
@@ -18,8 +19,14 @@ export default function Dock() {
       const lastWin = appWindows[appWindows.length - 1];
       if (lastWin.isMinimized) {
         focusWindow(lastWin.id);
-      } else if (windows.find((w) => w.id === lastWin.id && !w.isMinimized)) {
-        minimizeWindow(lastWin.id);
+      } else {
+        // Toggle minimize if it's already focused, or focus if not
+        const activeWinId = windows.find(w => !w.isMinimized && w.zIndex === Math.max(...windows.map(win => win.zIndex)))?.id;
+        if (activeWinId === lastWin.id) {
+          minimizeWindow(lastWin.id);
+        } else {
+          focusWindow(lastWin.id);
+        }
       }
     } else {
       openApp(appId);
@@ -34,6 +41,8 @@ export default function Dock() {
       >
         {dockApps.map((app) => {
           const isRunning = windows.some((w) => w.appId === app.id);
+          const isMinimized = isRunning && windows.every(w => w.appId === app.id ? w.isMinimized : true);
+
           return (
             <button
               key={app.id}
@@ -51,33 +60,14 @@ export default function Dock() {
                 {app.icon}
               </div>
               {isRunning && (
-                <div className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-blue-400" />
+                <div className={`absolute -bottom-0.5 w-1 h-1 rounded-full ${isMinimized ? 'bg-zinc-500' : 'bg-blue-400'}`} />
               )}
-              <span className="text-[9px] text-zinc-400 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity max-w-[56px] truncate text-center">
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-zinc-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap border border-white/10">
                 {app.name}
-              </span>
+              </div>
             </button>
           );
         })}
-        <div className="w-px h-10 bg-white/10 mx-1" />
-        {windows
-          .filter((w) => {
-            const app = builtInApps.find((a) => a.id === w.appId);
-            return !app || !dockApps.find((d) => d.id === w.appId);
-          })
-          .map((win) => (
-            <button
-              key={win.id}
-              onClick={() => focusWindow(win.id)}
-              className="relative group flex flex-col items-center"
-              title={win.title}
-            >
-              <div className="w-12 h-12 flex items-center justify-center rounded-xl text-2xl bg-blue-500/20 hover:bg-blue-500/30 transition-all hover:scale-110 active:scale-95">
-                {win.icon || "📱"}
-              </div>
-              <div className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-blue-400" />
-            </button>
-          ))}
       </div>
     </div>
   );

@@ -2,18 +2,18 @@
 
 import { useState, useCallback } from "react";
 import { useOSStore } from "@/store";
-import { Play, Save, Upload, Code, Eye } from "lucide-react";
+import { Play, Save, Upload, Download, Code, Eye } from "lucide-react";
 
 export default function AppBuilder() {
   const { installApp } = useOSStore();
   const [appName, setAppName] = useState("My App");
-  const [html, setHtml] = useState(`<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;">
-  <div style="text-align:center;">
-    <h1 style="font-size:2.5rem;margin-bottom:0.5rem;">Hello, BrowserOS!</h1>
-    <p style="font-size:1.2rem;opacity:0.8;">This is my first BrowserOS app</p>
-    <button style="margin-top:1rem;padding:0.75rem 2rem;border:none;border-radius:8px;background:white;color:#667eea;font-size:1rem;cursor:pointer;" onclick="this.textContent='It works!'">Click Me</button>
-  </div>
-</div>`);
+  const [html, setHtml] = useState('<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;">' +
+  '\n  <div style="text-align:center;">' +
+  '\n    <h1 style="font-size:2.5rem;margin-bottom:0.5rem;">Hello, BrowserOS!</h1>' +
+  '\n    <p style="font-size:1.2rem;opacity:0.8;">This is my first BrowserOS app</p>' +
+  '\n    <button style="margin-top:1rem;padding:0.75rem 2rem;border:none;border-radius:8px;background:white;color:#667eea;font-size:1rem;cursor:pointer;" onclick="this.textContent=\'It works!\'">Click Me</button>' +
+  '\n  </div>' +
+  '\n</div>');
   const [css, setCss] = useState("");
   const [js, setJs] = useState("");
   const [activeTab, setActiveTab] = useState<"html" | "css" | "js" | "preview">("html");
@@ -46,6 +46,44 @@ export default function AppBuilder() {
     alert(`"${appName}" has been installed! Find it in your apps.`);
   }, [appName, getPreviewDoc, installApp]);
 
+  const handleExport = useCallback(() => {
+    const appData = {
+      name: appName,
+      html,
+      css,
+      js
+    };
+    const blob = new Blob([JSON.stringify(appData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${appName.toLowerCase().replace(/\s+/g, "-")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [appName, html, css, js]);
+
+  const handleImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const appData = JSON.parse(event.target?.result as string);
+        if (appData.name) setAppName(appData.name);
+        if (appData.html) setHtml(appData.html);
+        if (appData.css) setCss(appData.css);
+        if (appData.js) setJs(appData.js);
+        setActiveTab("html");
+      } catch (err) {
+        console.error("Import failed:", err);
+        alert("Failed to parse app file.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    e.target.value = "";
+  }, []);
+
   return (
     <div className="h-full flex flex-col bg-zinc-900">
       {/* Toolbar */}
@@ -58,6 +96,18 @@ export default function AppBuilder() {
           placeholder="App name..."
         />
         <div className="flex-1" />
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors"
+          title="Export as JSON"
+        >
+          <Download size={14} />
+        </button>
+        <label className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-400 hover:text-white hover:bg-zinc-700 rounded transition-colors cursor-pointer" title="Import from JSON">
+          <Upload size={14} />
+          <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+        </label>
+        <div className="w-px h-4 bg-white/10 mx-1" />
         <button
           onClick={() => { setPreviewKey((k) => k + 1); setActiveTab("preview"); }}
           className="flex items-center gap-1 px-3 py-1 text-xs bg-green-600 hover:bg-green-500 rounded transition-colors"

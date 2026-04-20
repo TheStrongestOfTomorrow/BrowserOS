@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { OSWindow, AppDefinition, FileSystemNode, SystemSettings, GalleryApp } from "@/types";
+import { setItem } from "@/lib/storage";
 
 let windowCounter = 0;
 
@@ -183,18 +184,22 @@ export const useOSStore = create<OSState>((set, get) => ({
   },
 
   updateSettings: (updates: Partial<SystemSettings>) => {
-    set((state) => ({
-      settings: { ...state.settings, ...updates },
-    }));
+    set((state) => {
+      const newSettings = { ...state.settings, ...updates };
+      setItem("settings", newSettings).catch(console.error);
+      return { settings: newSettings };
+    });
   },
 
   setFileSystem: (fs: FileSystemNode) => {
+    setItem("fileSystem", fs).catch(console.error);
     set({ fileSystem: fs });
   },
 
   installApp: (app: GalleryApp) => {
     set((state) => {
       if (state.installedAppIds.includes(app.id)) return state;
+
       const newApp: AppDefinition = {
         id: app.id,
         name: app.name,
@@ -208,25 +213,40 @@ export const useOSStore = create<OSState>((set, get) => ({
         minHeight: 300,
         isBuiltIn: false,
       };
-      return {
+
+      const newState = {
         installedAppIds: [...state.installedAppIds, app.id],
         apps: [...state.apps, newApp],
-        galleryApps: state.galleryApps.map((a) =>
-          a.id === app.id ? { ...a, ...app } : a
-        ),
+        galleryApps: state.galleryApps.some(a => a.id === app.id)
+          ? state.galleryApps.map((a) => (a.id === app.id ? { ...a, ...app } : a))
+          : [...state.galleryApps, app],
       };
+
+      setItem("installedAppIds", newState.installedAppIds).catch(console.error);
+      setItem("galleryApps", newState.galleryApps).catch(console.error);
+
+      return newState;
     });
   },
 
   uninstallApp: (appId: string) => {
-    set((state) => ({
-      installedAppIds: state.installedAppIds.filter((id) => id !== appId),
-      apps: state.apps.filter((a) => !(a.id === appId && !a.isBuiltIn)),
-      windows: state.windows.filter((w) => w.appId !== appId),
-    }));
+    set((state) => {
+      const newState = {
+        installedAppIds: state.installedAppIds.filter((id) => id !== appId),
+        apps: state.apps.filter((a) => !(a.id === appId && !a.isBuiltIn)),
+        windows: state.windows.filter((w) => w.appId !== appId),
+        galleryApps: state.galleryApps.filter(a => a.id !== appId),
+      };
+
+      setItem("installedAppIds", newState.installedAppIds).catch(console.error);
+      setItem("galleryApps", newState.galleryApps).catch(console.error);
+
+      return newState;
+    });
   },
 
   setGalleryApps: (apps: GalleryApp[]) => {
+    setItem("galleryApps", apps).catch(console.error);
     set({ galleryApps: apps });
   },
 
