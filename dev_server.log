@@ -594,3 +594,5 @@ https://nextjs.org/docs/messages/module-not-found
 Import trace for requested module:
 ./src/store/index.ts
 ./src/app/page.tsx
+ GET / 200 in 588ms (next.js: 266ms, application-code: 322ms)
+ GET / 200 in 61ms (next.js: 12ms, application-code: 49ms)
